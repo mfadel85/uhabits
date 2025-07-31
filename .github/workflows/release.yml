@@ -1,0 +1,249 @@
+name: 🎉 Release Enhanced uHabits
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0, v2.1.0, etc.
+  workflow_dispatch:  # Allow manual release
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    name: 🚀 Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: 🐘 Setup Gradle
+      uses: gradle/gradle-build-action@v2
+
+    - name: 📱 Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 36
+        target: google_apis
+        arch: x86_64
+
+    - name: 🔑 Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: 📋 Grant execute permission for gradlew
+      run: |
+        cd uhabits
+        chmod +x gradlew
+
+    - name: 🔨 Build Release APK
+      run: |
+        cd uhabits
+        ./gradlew clean
+        ./gradlew :uhabits-android:assembleRelease
+
+    - name: 🏷️ Get version
+      id: version
+      run: |
+        if [ "${{ github.event.inputs.version }}" != "" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: 📝 Generate Release Notes
+      run: |
+        cat > release-notes.md << 'EOF'
+        # 🚀 Enhanced uHabits with Advanced Analytics
+        
+        ## 🎯 What's New in This Release
+        
+        ### 📊 Advanced Analytics System
+        - **100-Point Scoring**: Intuitive 0-100 scoring instead of 0-1 scale
+        - **Multi-Timeframe Analysis**: Daily, weekly, and monthly performance metrics
+        - **Trend Detection**: Automatic identification of improving/declining patterns
+        - **Streak Bonuses**: Extra points for consistent habit maintenance
+        
+        ### 🔗 Business Intelligence Integration
+        - **PowerBI Export**: CSV format optimized for Microsoft PowerBI
+        - **Looker Studio Support**: JSON export for Google's BI platform
+        - **Custom Analytics**: Comprehensive data export for any BI tool
+        
+        ### 🎨 Enhanced User Interface
+        - **Professional Dashboard**: Tab-based analytics interface
+        - **Progress Indicators**: Circular progress bars with 0-100 scores
+        - **Trend Arrows**: Visual indicators for performance direction
+        - **Correlation Analysis**: Discover relationships between habits
+        
+        ### 📈 Performance Insights
+        - **Consistency Scoring**: Measure habit regularity
+        - **Velocity Tracking**: Rate of improvement/decline
+        - **Performance Categories**: Excellent, Good, Average, Poor ratings
+        - **Maturity Bonuses**: Extra points for long-established habits
+        
+        ## 📱 Installation Instructions
+        
+        ### Samsung/Android Devices:
+        1. **Download** the `enhanced-uhabits-release.apk` file below
+        2. **Enable Unknown Sources**: Settings → Apps → Special Access → Install Unknown Apps
+        3. **Install APK**: Tap the downloaded file and follow prompts
+        4. **Launch**: Open "Loop Habit Tracker"
+        5. **Access Analytics**: Tap menu (⋮) → "Advanced Analytics"
+        
+        ### First-Time Setup:
+        - Create or import your existing habits
+        - Use the app for a few days to generate analytics data
+        - Export data to PowerBI/Looker Studio for advanced dashboards
+        
+        ## 🔧 Technical Details
+        
+        - **Android Version**: Requires Android 7.0+ (API 28+)
+        - **Permissions**: Same as original uHabits (no additional permissions)
+        - **Size**: ~8-10MB (similar to original)
+        - **Compatibility**: Works with existing uHabits data
+        
+        ## 🎯 Business Intelligence Setup
+        
+        ### PowerBI Integration:
+        1. Export data from app: Menu → Advanced Analytics → Export → PowerBI Dataset
+        2. Import CSV files into PowerBI Desktop
+        3. Create relationships between habit_metadata.csv and daily_scores.csv
+        4. Build visualizations using 0-100 scoring system
+        
+        ### Looker Studio Integration:
+        1. Export data: Menu → Advanced Analytics → Export → Looker Studio
+        2. Create new report in Looker Studio
+        3. Upload the JSON file as data source
+        4. Use ScoreCategory field for color-coded visualizations
+        
+        ## 🐛 Known Issues
+        - None currently reported
+        
+        ## 💡 Tips for Best Results
+        - Use the app consistently for at least a week to see meaningful analytics
+        - Export data weekly/monthly for trend analysis in BI tools
+        - Check correlation analysis to discover habit relationships
+        
+        ---
+        
+        **Built with ❤️ by mfadel85**
+        
+        *Based on the excellent Loop Habit Tracker by Álinson Santos Xavier*
+        EOF
+
+    - name: 📦 Prepare Release Assets
+      run: |
+        cd uhabits
+        mkdir -p release-assets
+        
+        # Copy APK with better name
+        if [ -f "uhabits-android/build/outputs/apk/release/uhabits-android-release-unsigned.apk" ]; then
+          cp "uhabits-android/build/outputs/apk/release/uhabits-android-release-unsigned.apk" "release-assets/enhanced-uhabits-${{ steps.version.outputs.version }}.apk"
+        fi
+        
+        # Create installation guide
+        cat > release-assets/INSTALLATION-GUIDE.txt << 'EOF'
+        📱 Enhanced uHabits - Installation Guide
+        =====================================
+        
+        🚀 Quick Start:
+        1. Download enhanced-uhabits-vX.X.X.apk
+        2. Enable "Install from Unknown Sources" on your Android device
+        3. Install the APK file
+        4. Open "Loop Habit Tracker"
+        5. Look for "Advanced Analytics" in the menu!
+        
+        🎯 New Features:
+        • 100-point scoring system
+        • Advanced analytics dashboard  
+        • PowerBI/Looker Studio export
+        • Habit correlation analysis
+        • Weekly/monthly performance tracking
+        
+        💡 For detailed setup instructions, see the release notes.
+        EOF
+        
+        # Create BI integration guide
+        cat > release-assets/BI-INTEGRATION-GUIDE.txt << 'EOF'
+        📊 Business Intelligence Integration Guide
+        ========================================
+        
+        🎯 Your Enhanced uHabits now supports professional BI tools!
+        
+        📤 Data Export:
+        1. Open Enhanced uHabits
+        2. Menu → Advanced Analytics
+        3. Menu → Export Data
+        4. Choose format: PowerBI (CSV) or Looker Studio (JSON)
+        
+        📈 PowerBI Setup:
+        1. Open PowerBI Desktop
+        2. Get Data → Text/CSV
+        3. Import daily_scores.csv and habit_metadata.csv
+        4. Create relationships between tables
+        5. Build dashboards with 0-100 scoring
+        
+        📊 Looker Studio Setup:
+        1. Open Looker Studio
+        2. Create New Report
+        3. Add Data Source → File Upload
+        4. Upload exported JSON file
+        5. Create time-series visualizations
+        
+        🎨 Suggested Charts:
+        • Line charts: Daily scores over time
+        • Bar charts: Average scores by habit
+        • Heat maps: Weekly patterns
+        • Trend indicators: Performance direction
+        EOF
+
+    - name: 🎉 Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: "Enhanced uHabits ${{ steps.version.outputs.version }} - Advanced Analytics"
+        body_path: release-notes.md
+        prerelease: ${{ github.event.inputs.prerelease }}
+        files: |
+          uhabits/release-assets/*
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 📢 Release Summary
+      run: |
+        echo "🎉 Enhanced uHabits ${{ steps.version.outputs.version }} released successfully!"
+        echo ""
+        echo "📋 Release Details:"
+        echo "=================="
+        echo "✅ Version: ${{ steps.version.outputs.version }}"
+        echo "✅ Repository: ${{ github.repository }}"
+        echo "✅ Commit: ${{ github.sha }}"
+        echo "✅ Pre-release: ${{ github.event.inputs.prerelease }}"
+        echo ""
+        echo "📱 Release includes:"
+        echo "• Enhanced uHabits APK with 100-point scoring"
+        echo "• Installation guide"
+        echo "• Business Intelligence integration guide"
+        echo ""
+        echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.version }}"
