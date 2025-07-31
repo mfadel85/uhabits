@@ -33,20 +33,8 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: 🐘 Setup Gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        gradle-version: wrapper
-
-    - name: 📱 Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        api-level: 36
-        target: google_apis
-        arch: x86_64
-
     - name: 🔑 Cache Gradle dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -55,31 +43,44 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
+    - name: 📱 Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: 🔧 Validate Gradle Wrapper
+      uses: gradle/wrapper-validation-action@v1
+
     - name: 📋 Grant execute permission for gradlew
-      run: |
-        cd uhabits
-        chmod +x gradlew
+      run: chmod +x gradlew
 
     - name: 🧹 Clean project
+      run: ./gradlew clean
+
+    - name: 🔍 Check project structure
       run: |
-        cd uhabits
-        ./gradlew clean
+        echo "📁 Project structure:"
+        ls -la
+        echo "📁 Android module:"
+        ls -la uhabits-android/
+        echo "📁 Core module:"
+        ls -la uhabits-core/
 
     - name: 🔨 Build Debug APK
       if: github.event.inputs.build_type != 'release'
       run: |
-        cd uhabits
-        ./gradlew :uhabits-android:assembleDebug
+        echo "🔨 Building debug APK..."
+        ./gradlew :uhabits-android:assembleDebug --stacktrace --info
         
     - name: 🔨 Build Release APK
       if: github.event.inputs.build_type == 'release' || github.ref == 'refs/heads/main'
       run: |
-        cd uhabits
-        ./gradlew :uhabits-android:assembleRelease
+        echo "🔨 Building release APK..."
+        ./gradlew :uhabits-android:assembleRelease --stacktrace --info
 
     - name: 📊 Get APK info
       run: |
-        cd uhabits
+        echo "🔍 Checking for APK files..."
+        find . -name "*.apk" -type f
+        
         if [ -f "uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk" ]; then
           echo "📱 Debug APK size: $(du -h uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk | cut -f1)"
           echo "📍 Debug APK path: uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk"
@@ -91,7 +92,6 @@ jobs:
 
     - name: 🏷️ Generate build info
       run: |
-        cd uhabits
         echo "# 🚀 Enhanced uHabits Build Information" > build-info.md
         echo "" >> build-info.md
         echo "**Build Date:** $(date)" >> build-info.md
@@ -119,9 +119,10 @@ jobs:
       with:
         name: enhanced-uhabits-debug-${{ github.run_number }}
         path: |
-          uhabits/uhabits-android/build/outputs/apk/debug/*.apk
-          uhabits/build-info.md
+          uhabits-android/build/outputs/apk/debug/*.apk
+          build-info.md
         retention-days: 30
+        if-no-files-found: warn
 
     - name: 📦 Upload Release APK
       if: github.event.inputs.build_type == 'release' || github.ref == 'refs/heads/main'
@@ -129,9 +130,10 @@ jobs:
       with:
         name: enhanced-uhabits-release-${{ github.run_number }}
         path: |
-          uhabits/uhabits-android/build/outputs/apk/release/*.apk
-          uhabits/build-info.md
+          uhabits-android/build/outputs/apk/release/*.apk
+          build-info.md
         retention-days: 90
+        if-no-files-found: warn
 
     - name: 🎉 Build Summary
       run: |
