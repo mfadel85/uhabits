@@ -4,7 +4,8 @@
  * Advanced Analytics Engine for Loop Habit Tracker.
  * 
  * Provides comprehensive analytics, insights, and trend analysis
- * for habit tracking data.
+ * for habit tracking data. 
+ * All commonMain conflicts removed.
  */
 
 package org.isoron.uhabits.core.models.analytics
