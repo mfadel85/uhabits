@@ -177,7 +177,7 @@ data class AdvancedScore(
         private fun calculateStreakBonus(habit: Habit, timestamp: Timestamp): Double {
             // Get current streak length
             val streakList = habit.streaks
-            val currentStreak = streakList.getAll().firstOrNull()?.length ?: 0
+            val currentStreak = streakList.getBest(1).firstOrNull()?.length ?: 0
             
             // Bonus points based on streak length
             return when {

@@ -12,6 +12,7 @@ package org.isoron.uhabits.core.io.analytics
 import com.opencsv.CSVWriter
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.HabitMatcher
 import org.isoron.uhabits.core.models.Timestamp
 import org.isoron.uhabits.core.models.analytics.AnalyticsEngine
 import org.isoron.uhabits.core.models.analytics.AdvancedScore
@@ -112,7 +113,7 @@ class AnalyticsDataExporter(
             "Unit"
         ), false)
         
-        val habits = habitList.getFiltered { !it.isArchived }
+        val habits = habitList.getFiltered(HabitMatcher(isArchivedAllowed = false))
         
         habits.forEach { habit ->
             val scores = habit.scores.getByInterval(startDate, endDate)
@@ -561,7 +562,7 @@ class AnalyticsDataExporter(
             "HabitFrequency"
         ), false)
         
-        val habits = habitList.getFiltered { !it.isArchived }
+        val habits = habitList.getFiltered(HabitMatcher(isArchivedAllowed = false))
         
         habits.forEach { habit ->
             val scores = habit.scores.getByInterval(startDate, endDate)
@@ -620,7 +621,7 @@ class AnalyticsDataExporter(
     }
     
     private fun calculateTotalRecords(startDate: Timestamp, endDate: Timestamp): Int {
-        val habits = habitList.getFiltered { !it.isArchived }
+        val habits = habitList.getFiltered(HabitMatcher(isArchivedAllowed = false))
         val days = startDate.daysUntil(endDate) + 1
         return habits.size * days
     }
