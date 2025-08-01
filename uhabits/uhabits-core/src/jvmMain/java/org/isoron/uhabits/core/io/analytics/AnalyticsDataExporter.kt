@@ -24,6 +24,7 @@ import java.io.File
 import java.io.FileWriter
 import java.io.Writer
 import java.util.*
+import java.util.Calendar
 
 /**
  * Enhanced CSV exporter optimized for Business Intelligence platforms
@@ -216,7 +217,7 @@ class AnalyticsDataExporter(
                     habit.frequency.numerator == 1 && habit.frequency.denominator == 30 -> "Monthly"
                     else -> "${habit.frequency.numerator} times per ${habit.frequency.denominator} days"
                 },
-                habit.color.toString(),
+                habit.color.toCsvColor(),
                 habit.unit,
                 if (habit.isNumerical) habit.targetType.name else "",
                 if (habit.isNumerical) habit.targetValue.toString() else "",
