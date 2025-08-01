@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <View
+        android:id="@+id/correlationIndicator"
+        android:layout_width="4dp"
+        android:layout_height="40dp"
+        android:background="@color/green_500" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/habitPairText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Exercise ↔ Sleep"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/correlationDescriptionText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Strong positive correlation"
+            android:textSize="12sp"
+            android:textColor="@color/grey_600" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/correlationStrengthText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0.85"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/green_500" />
+
+</LinearLayout>

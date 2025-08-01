@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/movingAvg7Text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="7-day average: 85%"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/movingAvg30Text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="30-day average: 78%"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/movingAvg90Text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="90-day average: 72%"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/volatilityText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Consistency: 78/100"
+        android:textSize="14sp" />
+
+</LinearLayout>

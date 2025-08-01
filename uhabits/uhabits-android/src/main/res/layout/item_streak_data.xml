@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/currentStreakText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Current best: 15 days"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/bestStreakText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="All-time best: 45 days"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/averageStreakText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Average length: 12 days"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/recoveryRateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Recovery rate: 75%"
+        android:textSize="14sp" />
+
+</LinearLayout>
