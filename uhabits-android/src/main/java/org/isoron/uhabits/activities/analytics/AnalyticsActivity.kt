@@ -82,10 +82,12 @@ class AnalyticsActivity : AppCompatActivity() {
                 • Streak analytics
                 • AI-powered recommendations
                 
-                📁 Files will be saved to the most accessible location:
-                • Downloads folder (if available)
-                • App storage (if Downloads unavailable)
-                • Internal storage (as fallback)
+                📁 Files will be saved to accessible locations:
+                • App Downloads folder (accessible via file manager)
+                • App Documents folder (if Downloads unavailable)
+                • Internal storage (secure fallback)
+                
+                ✅ No storage permissions required on modern Android!
             """.trimIndent()
             setPadding(0, 0, 0, 32)
         }
@@ -118,20 +120,7 @@ class AnalyticsActivity : AppCompatActivity() {
     }
     
     private fun exportAllData() {
-        // Check for storage permission first
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
-                != PackageManager.PERMISSION_GRANTED) {
-                
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    STORAGE_PERMISSION_CODE
-                )
-                return
-            }
-        }
-        
+        // Modern Android - no permission needed for app-specific storage
         performExport()
     }
     
@@ -207,48 +196,69 @@ class AnalyticsActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         
-        if (requestCode == STORAGE_PERMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                performExport()
-            } else {
-                Toast.makeText(
-                    this,
-                    "Storage permission is required to export data to Downloads folder",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+        // Modern Android handles storage automatically - no action needed
     }
     
     /**
-     * Gets the optimal directory for exporting files, trying multiple locations
+     * Gets the optimal directory for exporting files, using modern Android storage APIs
      */
     private fun getOptimalExportDirectory(): File {
         val folderName = "uHabits_Analytics"
         
-        // Option 1: Public Downloads folder (works on most devices)
-        try {
-            if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
-                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                if (downloadsDir != null && (downloadsDir.exists() || downloadsDir.mkdirs())) {
-                    return File(downloadsDir, folderName)
+        // Modern Android approach - prioritize accessible locations
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                // Android 10+ - Use app-specific directories that don't require permissions
+                
+                // Option 1: App-specific Downloads directory (accessible via file manager)
+                try {
+                    val appDownloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                    if (appDownloadsDir != null && (appDownloadsDir.exists() || appDownloadsDir.mkdirs())) {
+                        return File(appDownloadsDir, folderName)
+                    }
+                } catch (e: Exception) {
+                    // Fall through to next option
+                }
+                
+                // Option 2: App-specific Documents directory
+                try {
+                    val appDocsDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+                    if (appDocsDir != null && (appDocsDir.exists() || appDocsDir.mkdirs())) {
+                        return File(appDocsDir, folderName)
+                    }
+                } catch (e: Exception) {
+                    // Fall through to next option
                 }
             }
-        } catch (e: Exception) {
-            // Fall through to next option
-        }
-        
-        // Option 2: App-specific external storage (doesn't require permissions on Android 10+)
-        try {
-            val appExternalDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-            if (appExternalDir != null && (appExternalDir.exists() || appExternalDir.mkdirs())) {
-                return File(appExternalDir, folderName)
+            else -> {
+                // Android 6-9 - Try public Downloads if permission granted
+                try {
+                    if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
+                        == PackageManager.PERMISSION_GRANTED) {
+                        
+                        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                        if (downloadsDir != null && (downloadsDir.exists() || downloadsDir.mkdirs())) {
+                            return File(downloadsDir, folderName)
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Fall through to next option
+                }
+                
+                // Option 2: App-specific external storage (works without permission)
+                try {
+                    val appExternalDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                    if (appExternalDir != null && (appExternalDir.exists() || appExternalDir.mkdirs())) {
+                        return File(appExternalDir, folderName)
+                    }
+                } catch (e: Exception) {
+                    // Fall through to next option
+                }
             }
-        } catch (e: Exception) {
-            // Fall through to next option
         }
         
-        // Option 3: Internal storage (always available)
+        // Final fallback: Internal storage (always available)
         val internalDir = File(filesDir, folderName)
         return internalDir
     }
@@ -260,13 +270,17 @@ class AnalyticsActivity : AppCompatActivity() {
         val path = outputDir.absolutePath
         return when {
             path.contains("/Download") && path.contains("/storage/emulated/0") -> 
-                "Downloads/uHabits_Analytics/"
+                "Public Downloads/uHabits_Analytics/\n(Accessible via file manager)"
+            path.contains("/Android/data") && path.contains("/Download") -> 
+                "App Downloads/uHabits_Analytics/\n(Accessible via file manager)"
+            path.contains("/Android/data") && path.contains("/Documents") -> 
+                "App Documents/uHabits_Analytics/\n(Accessible via file manager)"
             path.contains("/Android/data") -> 
-                "App Storage/Downloads/uHabits_Analytics/"
+                "App Storage/uHabits_Analytics/\n(Accessible via file manager)"
             path.contains("/data/data") -> 
-                "Internal Storage/uHabits_Analytics/"
+                "Internal Storage/uHabits_Analytics/\n(App private folder)"
             else -> 
-                "uHabits_Analytics/ (${outputDir.parent})"
+                "uHabits_Analytics/\n(Location: ${outputDir.parent})"
         }
     }
     
