@@ -75,19 +75,18 @@ class AnalyticsActivity : AppCompatActivity() {
                 • Custom analysis tools
                 
                 Export includes:
-                • Daily scores and trends
-                • Habit metadata
-                • Weekly/Monthly performance
-                • Correlation analysis
-                • Streak analytics
-                • AI-powered recommendations
+                • Complete habit information (name, type, color, frequency)
+                • Entry counts and statistics
+                • Target values for numerical habits
+                • Archive status and metadata
+                • Timestamped export files
                 
-                📁 Files will be saved to accessible locations:
-                • App Downloads folder (accessible via file manager)
-                • App Documents folder (if Downloads unavailable)
-                • Internal storage (secure fallback)
+                📁 Files saved to Downloads folder:
+                • uhabits_export_[date].csv (main data)
+                • export_info_[date].txt (instructions & info)
                 
-                ✅ No storage permissions required on modern Android!
+                ✅ Files will appear in your Downloads folder!
+                📱 Check: Downloads → uHabits_Analytics folder
             """.trimIndent()
             setPadding(0, 0, 0, 32)
         }
@@ -200,65 +199,59 @@ class AnalyticsActivity : AppCompatActivity() {
     }
     
     /**
-     * Gets the optimal directory for exporting files, using modern Android storage APIs
+     * Gets the optimal directory for exporting files, prioritizing public Downloads folder
      */
     private fun getOptimalExportDirectory(): File {
         val folderName = "uHabits_Analytics"
         
-        // Modern Android approach - prioritize accessible locations
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                // Android 10+ - Use app-specific directories that don't require permissions
-                
-                // Option 1: App-specific Downloads directory (accessible via file manager)
-                try {
-                    val appDownloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-                    if (appDownloadsDir != null && (appDownloadsDir.exists() || appDownloadsDir.mkdirs())) {
-                        return File(appDownloadsDir, folderName)
+        // Try to use public Downloads folder first (most user-friendly)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ - Use MediaStore API for Downloads folder
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (downloadsDir != null && Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
+                    val exportDir = File(downloadsDir, folderName)
+                    if (exportDir.exists() || exportDir.mkdirs()) {
+                        return exportDir
                     }
-                } catch (e: Exception) {
-                    // Fall through to next option
                 }
-                
-                // Option 2: App-specific Documents directory
-                try {
-                    val appDocsDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
-                    if (appDocsDir != null && (appDocsDir.exists() || appDocsDir.mkdirs())) {
-                        return File(appDocsDir, folderName)
-                    }
-                } catch (e: Exception) {
-                    // Fall through to next option
-                }
-            }
-            else -> {
-                // Android 6-9 - Try public Downloads if permission granted
-                try {
-                    if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED &&
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
-                        == PackageManager.PERMISSION_GRANTED) {
-                        
-                        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                        if (downloadsDir != null && (downloadsDir.exists() || downloadsDir.mkdirs())) {
-                            return File(downloadsDir, folderName)
+            } else {
+                // Android 6-9 - Traditional Downloads folder
+                if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
+                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    if (downloadsDir != null) {
+                        val exportDir = File(downloadsDir, folderName)
+                        if (exportDir.exists() || exportDir.mkdirs()) {
+                            return exportDir
                         }
                     }
-                } catch (e: Exception) {
-                    // Fall through to next option
-                }
-                
-                // Option 2: App-specific external storage (works without permission)
-                try {
-                    val appExternalDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-                    if (appExternalDir != null && (appExternalDir.exists() || appExternalDir.mkdirs())) {
-                        return File(appExternalDir, folderName)
-                    }
-                } catch (e: Exception) {
-                    // Fall through to next option
                 }
             }
+        } catch (e: Exception) {
+            // Fall through to app-specific storage
         }
         
-        // Final fallback: Internal storage (always available)
+        // Fallback 1: App-specific Downloads directory
+        try {
+            val appDownloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            if (appDownloadsDir != null && (appDownloadsDir.exists() || appDownloadsDir.mkdirs())) {
+                return File(appDownloadsDir, folderName)
+            }
+        } catch (e: Exception) {
+            // Fall through to next option
+        }
+        
+        // Fallback 2: App-specific Documents directory
+        try {
+            val appDocsDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+            if (appDocsDir != null && (appDocsDir.exists() || appDocsDir.mkdirs())) {
+                return File(appDocsDir, folderName)
+            }
+        } catch (e: Exception) {
+            // Fall through to next option
+        }
+        
+        // Final fallback: Internal storage
         val internalDir = File(filesDir, folderName)
         return internalDir
     }
@@ -269,53 +262,94 @@ class AnalyticsActivity : AppCompatActivity() {
     private fun getExportLocationName(outputDir: File): String {
         val path = outputDir.absolutePath
         return when {
-            path.contains("/Download") && path.contains("/storage/emulated/0") -> 
-                "Public Downloads/uHabits_Analytics/\n(Accessible via file manager)"
+            path.contains("/Download") && path.contains("/storage/emulated/0") && !path.contains("/Android/data") -> 
+                "📁 Downloads/uHabits_Analytics/\n✅ Look in your Downloads folder!"
             path.contains("/Android/data") && path.contains("/Download") -> 
-                "App Downloads/uHabits_Analytics/\n(Accessible via file manager)"
+                "📁 App Downloads/uHabits_Analytics/\n📱 Open file manager → Android/data/org.isoron.uhabits/files/Download/"
             path.contains("/Android/data") && path.contains("/Documents") -> 
-                "App Documents/uHabits_Analytics/\n(Accessible via file manager)"
+                "📁 App Documents/uHabits_Analytics/\n📱 Open file manager → Android/data/org.isoron.uhabits/files/Documents/"
             path.contains("/Android/data") -> 
-                "App Storage/uHabits_Analytics/\n(Accessible via file manager)"
+                "📁 App Storage/uHabits_Analytics/\n📱 Open file manager → Android/data/org.isoron.uhabits/"
             path.contains("/data/data") -> 
-                "Internal Storage/uHabits_Analytics/\n(App private folder)"
+                "📁 Internal Storage/uHabits_Analytics/\n⚠️ Files saved to app private folder"
             else -> 
-                "uHabits_Analytics/\n(Location: ${outputDir.parent})"
+                "📁 uHabits_Analytics/\n📍 Location: ${outputDir.absolutePath}"
         }
     }
     
     private fun exportSimpleData(outputDir: File): Boolean {
         return try {
-            // Create a simple CSV export of habits data
-            val csvFile = File(outputDir, "habits_export.csv")
-            csvFile.writeText("Habit_Name,Total_Entries,Is_Archived,Type\n")
+            val timestamp = DateUtils.getToday().toString()
+            
+            // Create a comprehensive CSV export of habits data
+            val csvFile = File(outputDir, "uhabits_export_$timestamp.csv")
+            csvFile.writeText("Habit_Name,Total_Entries,Is_Archived,Type,Color,Frequency,Target_Value\n")
             
             habitList.forEach { habit ->
                 val entries = habit.computedEntries
                 val totalEntries = entries.getKnown().size
-                csvFile.appendText("${habit.name},$totalEntries,${habit.isArchived},${habit.type}\n")
+                val color = habit.color.toString()
+                val frequency = habit.frequency.toString()
+                val targetValue = if (habit.isNumerical) habit.targetValue else "N/A"
+                
+                csvFile.appendText("\"${habit.name}\",$totalEntries,${habit.isArchived},${habit.type},$color,$frequency,$targetValue\n")
             }
             
-            // Create a summary file
-            val summaryFile = File(outputDir, "export_summary.txt")
+            // Create a detailed summary file
+            val summaryFile = File(outputDir, "export_info_$timestamp.txt")
             summaryFile.writeText("""
                 uHabits Analytics Export
+                ========================
                 Export Date: ${DateUtils.getToday()}
+                Export Time: ${System.currentTimeMillis()}
                 Total Habits: ${habitList.size()}
                 Active Habits: ${habitList.getFiltered(org.isoron.uhabits.core.models.HabitMatcher(isArchivedAllowed = false)).size()}
                 
-                Files exported:
-                - habits_export.csv: Basic habit data
+                📁 Files exported:
+                - uhabits_export_$timestamp.csv: Complete habit data
+                - export_info_$timestamp.txt: This summary file
                 
-                To use with PowerBI:
+                📊 How to use with PowerBI:
                 1. Open PowerBI Desktop
-                2. Get Data > Text/CSV
-                3. Select habits_export.csv
-                4. Create visualizations
+                2. Get Data → Text/CSV
+                3. Select uhabits_export_$timestamp.csv
+                4. Transform data as needed
+                5. Create visualizations
                 
-                For advanced analytics, consider implementing the full
-                AnalyticsDataExporter with proper AnalyticsEngine integration.
+                📈 How to use with Excel:
+                1. Open Excel
+                2. Data → From Text/CSV
+                3. Select uhabits_export_$timestamp.csv
+                4. Import and analyze
+                
+                🔍 Data Columns Explained:
+                - Habit_Name: The name of your habit
+                - Total_Entries: Number of recorded entries
+                - Is_Archived: Whether the habit is archived
+                - Type: Habit type (boolean, numerical, etc.)
+                - Color: Habit color code
+                - Frequency: How often the habit should be performed
+                - Target_Value: Target value for numerical habits
+                
+                📍 Export Location: ${outputDir.absolutePath}
+                
+                Happy analyzing! 🚀
             """.trimIndent())
+            
+            // Try to notify the MediaStore about new files (Android 10+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    // Scan files so they appear in Downloads immediately
+                    android.media.MediaScannerConnection.scanFile(
+                        this,
+                        arrayOf(csvFile.absolutePath, summaryFile.absolutePath),
+                        null,
+                        null
+                    )
+                } catch (e: Exception) {
+                    // MediaScanner not critical, continue
+                }
+            }
             
             true
         } catch (e: Exception) {
