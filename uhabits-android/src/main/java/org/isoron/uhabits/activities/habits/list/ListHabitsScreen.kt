@@ -164,6 +164,11 @@ class ListHabitsScreen
         val intent = intentFactory.startAboutActivity(activity)
         activity.startActivity(intent)
     }
+    
+    override fun showAnalyticsScreen() {
+        val intent = intentFactory.startAnalyticsActivity(activity)
+        activity.startActivity(intent)
+    }
 
     override fun showSelectHabitTypeDialog() {
         val dialog = HabitTypeDialog()

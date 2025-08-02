@@ -1,0 +1,61 @@
+name: Firebase App Distribution
+
+on:
+  push:
+    branches: [ dev ]
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Release notes for testers'
+        required: false
+        default: 'New analytics features and improvements'
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🔄 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: 📱 Set up Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        build-tools: 34.0.0
+        
+    - name: 🔑 Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: 🏗️ Build Debug APK
+      run: ./gradlew assembleDebug
+      
+    - name: 🔥 Distribute to Firebase App Distribution
+      uses: wzieba/Firebase-Distribution-Github-Action@v1
+      with:
+        appId: ${{ secrets.FIREBASE_APP_ID }}
+        serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        groups: testers
+        file: uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk
+        releaseNotes: |
+          🚀 uHabits with Advanced Analytics - Build #${{ github.run_number }}
+          
+          📊 New Features:
+          • Advanced Analytics & Data Export
+          • PowerBI/Looker Studio Integration  
+          • CSV Export to accessible folders
+          • Robust storage handling for all devices
+          
+          🧪 Test Instructions:
+          1. Open uHabits app
+          2. Tap menu (⋮) → "Analytics & Export"
+          3. Try exporting data
+          4. Check Downloads folder for exported files
+          
+          ${{ github.event.inputs.release_notes || '' }}

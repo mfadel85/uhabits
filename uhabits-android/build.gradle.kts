@@ -110,11 +110,7 @@ dependencies {
     implementation(libs.opencsv)
     implementation(libs.konfetti.xml)
     implementation(project(":uhabits-core"))
-    
-    // Enhanced Analytics Dependencies
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("androidx.cardview:cardview:1.0.0")
-    
+
     ksp(libs.dagger.compiler)
 
     androidTestImplementation(libs.bundles.androidTest)

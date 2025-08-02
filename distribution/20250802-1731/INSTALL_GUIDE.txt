@@ -1,0 +1,26 @@
+🚀 QUICK INSTALL GUIDE
+=====================
+
+📱 FOR ANDROID USERS:
+
+1. ENABLE UNKNOWN SOURCES
+   → Settings → Security → "Unknown sources" (ON)
+   → Or Settings → Apps → "Install unknown apps"
+
+2. DOWNLOAD & INSTALL
+   → Download: uHabits-Analytics-20250802-1731-e9ba9ce2.apk
+   → Tap the APK file to install
+   → Allow installation when prompted
+
+3. TEST ANALYTICS
+   → Open uHabits app
+   → Menu (⋮) → "Analytics & Export"
+   → Tap "Export All Analytics Data"
+   → Check Downloads folder for files
+
+🔧 TROUBLESHOOTING:
+- If installation blocked: Check "Unknown sources" setting
+- If export fails: Grant storage permission when asked
+- If no files appear: Check internal storage or app folder
+
+📧 Need help? Create an issue on GitHub!

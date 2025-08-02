@@ -44,6 +44,10 @@ class ListHabitsMenuBehavior @Inject constructor(
     fun onViewAbout() {
         screen.showAboutScreen()
     }
+    
+    fun onViewAnalytics() {
+        screen.showAnalyticsScreen()
+    }
 
     fun onViewSettings() {
         screen.showSettingsScreen()
@@ -130,6 +134,7 @@ class ListHabitsMenuBehavior @Inject constructor(
     interface Screen {
         fun applyTheme()
         fun showAboutScreen()
+        fun showAnalyticsScreen()
         fun showFAQScreen()
         fun showSettingsScreen()
         fun showSelectHabitTypeDialog()
