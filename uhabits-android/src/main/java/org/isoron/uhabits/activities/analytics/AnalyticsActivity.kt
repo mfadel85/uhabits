@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.isoron.uhabits.HabitsApplication
 import org.isoron.uhabits.R
+import org.isoron.uhabits.activities.analytics.CloudExportManager
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.utils.DateUtils
 import org.isoron.uhabits.inject.HabitsApplicationComponent
@@ -99,21 +100,81 @@ class AnalyticsActivity : AppCompatActivity() {
         }
         rootLayout.addView(summaryText)
         
+        // Cloud Export Section
+        val cloudTitle = TextView(this).apply {
+            text = "🌤️ Cloud Export for BI Tools"
+            textSize = 18f
+            setPadding(0, 32, 0, 16)
+        }
+        rootLayout.addView(cloudTitle)
+        
+        // Optimal day recommendation
+        val cloudExportManager = CloudExportManager(this, habitList)
+        val dayRecommendation = TextView(this).apply {
+            text = cloudExportManager.getOptimalExportRecommendation()
+            setPadding(16, 8, 16, 16)
+            setBackgroundColor(0xFF2196F3.toInt())
+            setTextColor(0xFFFFFFFF.toInt())
+        }
+        rootLayout.addView(dayRecommendation)
+        
+        // PowerBI Cloud Export
+        val exportPowerBIButton = Button(this).apply {
+            text = "📊 Export to OneDrive (PowerBI)"
+            setOnClickListener { 
+                CloudExportManager(this@AnalyticsActivity, habitList)
+                    .exportToCloud("powerbi", CloudExportManager.SERVICE_ONEDRIVE)
+            }
+        }
+        rootLayout.addView(exportPowerBIButton)
+        
+        // Looker Studio Cloud Export
+        val exportLookerButton = Button(this).apply {
+            text = "📈 Export to Google Drive (Looker)"
+            setOnClickListener { 
+                CloudExportManager(this@AnalyticsActivity, habitList)
+                    .exportToCloud("looker", CloudExportManager.SERVICE_GOOGLE_DRIVE)
+            }
+        }
+        rootLayout.addView(exportLookerButton)
+        
+        // Excel Cloud Export
+        val exportExcelButton = Button(this).apply {
+            text = "📋 Export to Dropbox (Excel)"
+            setOnClickListener { 
+                CloudExportManager(this@AnalyticsActivity, habitList)
+                    .exportToCloud("excel", CloudExportManager.SERVICE_DROPBOX)
+            }
+        }
+        rootLayout.addView(exportExcelButton)
+        
+        // Generic Cloud Export
+        val exportCloudButton = Button(this).apply {
+            text = "🌤️ Export to Any Cloud Service"
+            setOnClickListener { 
+                CloudExportManager(this@AnalyticsActivity, habitList)
+                    .exportToCloud("excel", "generic")
+            }
+        }
+        rootLayout.addView(exportCloudButton)
+        
+        // Local Export Section
+        val localTitle = TextView(this).apply {
+            text = "📱 Local Export Options"
+            textSize = 18f
+            setPadding(0, 32, 0, 16)
+        }
+        rootLayout.addView(localTitle)
+        
         // Export buttons
         val exportAllButton = Button(this).apply {
-            text = "Export All Analytics Data"
+            text = "📁 Export to Downloads Folder"
             setOnClickListener { exportAllData() }
         }
         rootLayout.addView(exportAllButton)
         
-        val exportPowerBIButton = Button(this).apply {
-            text = "Export PowerBI Dataset"
-            setOnClickListener { exportPowerBIData() }
-        }
-        rootLayout.addView(exportPowerBIButton)
-        
         val exportJSONButton = Button(this).apply {
-            text = "Export JSON Summary"
+            text = "🔧 Export JSON Summary"
             setOnClickListener { exportJSONData() }
         }
         rootLayout.addView(exportJSONButton)
@@ -180,16 +241,10 @@ class AnalyticsActivity : AppCompatActivity() {
         }
     }
     
-    private fun exportPowerBIData() {
-        Toast.makeText(this, "Exporting PowerBI optimized dataset...", Toast.LENGTH_SHORT).show()
-        // Similar implementation for PowerBI specific export
-        exportAllData() // For now, use the same method
-    }
-    
     private fun exportJSONData() {
         Toast.makeText(this, "Exporting JSON summary...", Toast.LENGTH_SHORT).show()
-        // Similar implementation for JSON export
-        exportAllData() // For now, use the same method
+        // Use cloud export manager for JSON
+        CloudExportManager(this, habitList).exportToCloud("looker", "generic", false)
     }
     
     override fun onRequestPermissionsResult(
