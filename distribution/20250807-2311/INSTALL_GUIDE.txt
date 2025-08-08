@@ -1,0 +1,87 @@
+# Installation Guide - uHabits Global Dashboard
+
+## APK Information:
+- **File**: uHabits-GlobalDashboard-20250807-2311-debug.apk
+- **Size**: ~29MB
+- **Version**: Debug build with Global Daily Performance Dashboard
+- **Enhancement Date**: August 7, 2025
+
+## Installation Steps:
+
+### 1. Enable Unknown Sources (if needed):
+- Go to Android Settings > Security (or Privacy)
+- Enable "Install apps from unknown sources" or "Unknown sources"
+- Or when prompted during installation, tap "Allow from this source"
+
+### 2. Install the APK:
+- Download the APK file to your Android device
+- Open your file manager and navigate to the download location
+- Tap on the APK file to begin installation
+- Follow the on-screen prompts to complete installation
+
+### 3. First Launch:
+- Open the uHabits app from your app drawer
+- You'll immediately see the new **"Daily Performance"** dashboard card
+- It appears at the top of the main screen, below the header
+
+## What You'll See:
+
+### Main Screen Dashboard:
+```
+┌─────────────────────────────────────┐
+│ Daily Performance          View Details │
+├─────────────────────────────────────┤
+│  Today    │  vs Yesterday: ↗ +5     │
+│    85     │  Week Avg: 78           │
+│ Excellent │  [Mini Chart Bars]      │
+│   4/5     │                         │
+└─────────────────────────────────────┘
+```
+
+### Key Elements:
+- **Today's Score**: Large number showing current daily performance (0-100)
+- **Category**: Text showing Excellent/Good/Average/Poor
+- **Completion**: Shows "completed/total" habits for today
+- **Comparison**: Arrow and number showing trend vs yesterday
+- **Weekly Average**: Your average score for the past week
+- **Mini Chart**: 7 colored bars showing daily scores for the week
+
+## How to Use:
+
+1. **Complete Habits**: Mark habits as done throughout the day
+2. **Watch Score Grow**: Your daily score increases with each completed habit
+3. **Check Trends**: See if you're improving compared to yesterday
+4. **Monitor Weekly Progress**: Use the mini chart to spot patterns
+5. **Aim for Excellence**: Try to reach 80+ points for "Excellent" rating
+
+## Scoring System:
+- **Base Points**: Calculated from habit completion percentage
+- **Bonus Points**: 
+  - Weekend completion (+2 points per habit)
+  - Monday motivation (+1 point per habit)
+  - Consistency bonus (up to +10 points)
+  - Streak bonus (up to +15 points)
+- **Partial Credit**: Numerical habits get partial points based on target achievement
+
+## Troubleshooting:
+
+### Dashboard Not Showing:
+- Ensure you have at least one active habit
+- Try refreshing by minimizing and reopening the app
+- Check that the installation completed successfully
+
+### Score Shows "---":
+- This is normal when you have no habits created yet
+- Create your first habit and the score will appear
+- Historical data builds up as you use the app
+
+### Performance Questions:
+- Scores update automatically when you complete habits
+- Data is stored locally on your device
+- No internet connection required for scoring
+
+## Support:
+This is an enhanced version of uHabits with the global daily performance dashboard feature you requested. The dashboard provides instant access to your overall daily scores and performance trends across all your habits.
+
+---
+*Installation guide for uHabits Global Dashboard enhancement*

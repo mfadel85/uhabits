@@ -28,11 +28,15 @@ import org.isoron.uhabits.R
 import org.isoron.uhabits.activities.common.views.ScrollableChart
 import org.isoron.uhabits.activities.common.views.TaskProgressBar
 import org.isoron.uhabits.activities.habits.list.views.EmptyListView
+import org.isoron.uhabits.activities.habits.list.views.GlobalDailyPerformanceView
 import org.isoron.uhabits.activities.habits.list.views.HabitCardListAdapter
 import org.isoron.uhabits.activities.habits.list.views.HabitCardListView
 import org.isoron.uhabits.activities.habits.list.views.HabitCardListViewFactory
 import org.isoron.uhabits.activities.habits.list.views.HeaderView
 import org.isoron.uhabits.activities.habits.list.views.HintView
+import org.isoron.uhabits.core.models.DailyScore
+import org.isoron.uhabits.core.models.DailyScoreCalculator
+import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.ModelObservable
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.preferences.Preferences
@@ -61,11 +65,12 @@ class ListHabitsRootView @Inject constructor(
     @ActivityContext context: Context,
     hintListFactory: HintListFactory,
     preferences: Preferences,
-    midnightTimer: MidnightTimer,
+    private val midnightTimer: MidnightTimer,
     runner: TaskRunner,
     private val listAdapter: HabitCardListAdapter,
-    habitCardListViewFactory: HabitCardListViewFactory
-) : FrameLayout(context), ModelObservable.Listener {
+    habitCardListViewFactory: HabitCardListViewFactory,
+    private val habitList: HabitList
+) : FrameLayout(context), ModelObservable.Listener, MidnightTimer.MidnightListener {
 
     val listView: HabitCardListView = habitCardListViewFactory.create()
     val llEmpty = EmptyListView(context)
@@ -76,6 +81,8 @@ class ListHabitsRootView @Inject constructor(
     val progressBar = TaskProgressBar(context, runner)
     val hintView: HintView
     val header = HeaderView(context, preferences, midnightTimer)
+    val globalPerformanceView = GlobalDailyPerformanceView(context)
+    private lateinit var dailyScoreCalculator: DailyScoreCalculator
 
     init {
         val hints = resources.getStringArray(R.array.hints)
@@ -87,8 +94,9 @@ class ListHabitsRootView @Inject constructor(
             addAtTop(konfettiView)
             addAtTop(tbar)
             addBelow(header, tbar)
-            addBelow(listView, header, height = MATCH_PARENT)
-            addBelow(llEmpty, header, height = MATCH_PARENT)
+            addBelow(globalPerformanceView, header)
+            addBelow(listView, globalPerformanceView, height = MATCH_PARENT)
+            addBelow(llEmpty, globalPerformanceView, height = MATCH_PARENT)
             addBelow(progressBar, header) {
                 it.topMargin = dp(-6.0f).toInt()
             }
@@ -103,10 +111,13 @@ class ListHabitsRootView @Inject constructor(
         )
         addView(rootView, MATCH_PARENT, MATCH_PARENT)
         listAdapter.setListView(listView)
+        dailyScoreCalculator = DailyScoreCalculator(habitList)
+        updateGlobalPerformanceData()
     }
 
     override fun onModelChange() {
         updateEmptyView()
+        updateGlobalPerformanceData()
     }
 
     private fun setupControllers() {
@@ -123,10 +134,14 @@ class ListHabitsRootView @Inject constructor(
         super.onAttachedToWindow()
         setupControllers()
         listAdapter.observable.addListener(this)
+        habitList.observable.addListener(this)
+        midnightTimer.addListener(this)
     }
 
     override fun onDetachedFromWindow() {
         listAdapter.observable.removeListener(this)
+        habitList.observable.removeListener(this)
+        midnightTimer.removeListener(this)
         super.onDetachedFromWindow()
     }
 
@@ -156,5 +171,24 @@ class ListHabitsRootView @Inject constructor(
         } else {
             llEmpty.hide()
         }
+    }
+
+    fun updateGlobalPerformance(dailyScores: List<DailyScore>) {
+        globalPerformanceView.setDailyScores(dailyScores)
+    }
+
+    private fun updateGlobalPerformanceData() {
+        try {
+            val dailyScores = dailyScoreCalculator.getLast30Days()
+            globalPerformanceView.setDailyScores(dailyScores)
+        } catch (e: Exception) {
+            // Handle any potential errors gracefully
+            e.printStackTrace()
+        }
+    }
+
+    override fun atMidnight() {
+        // Refresh performance data when the day changes
+        updateGlobalPerformanceData()
     }
 }

@@ -26,6 +26,8 @@ import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.ui.screens.habits.show.views.BarCardPresenter
 import org.isoron.uhabits.core.ui.screens.habits.show.views.BarCardState
+import org.isoron.uhabits.core.ui.screens.habits.show.views.DailyPerformanceCardPresenter
+import org.isoron.uhabits.core.ui.screens.habits.show.views.DailyPerformanceCardState
 import org.isoron.uhabits.core.ui.screens.habits.show.views.FrequencyCardPresenter
 import org.isoron.uhabits.core.ui.screens.habits.show.views.FrequencyCardState
 import org.isoron.uhabits.core.ui.screens.habits.show.views.HistoryCardPresenter
@@ -57,6 +59,7 @@ data class ShowHabitState(
     val frequency: FrequencyCardState,
     val history: HistoryCardState,
     val bar: BarCardState,
+    val dailyPerformance: DailyPerformanceCardState,
     val theme: Theme
 )
 
@@ -81,6 +84,11 @@ class ShowHabitPresenter(
     )
 
     val scoreCardPresenter = ScoreCardPresenter(
+        preferences = preferences,
+        screen = screen
+    )
+
+    val dailyPerformanceCardPresenter = DailyPerformanceCardPresenter(
         preferences = preferences,
         screen = screen
     )
@@ -138,6 +146,11 @@ class ShowHabitPresenter(
                     boolSpinnerPosition = preferences.barCardBoolSpinnerPosition,
                     numericalSpinnerPosition = preferences.barCardNumericalSpinnerPosition,
                     theme = theme
+                ),
+                dailyPerformance = DailyPerformanceCardPresenter.buildState(
+                    habit = habit,
+                    spinnerPosition = preferences.dailyPerformanceSpinnerPosition,
+                    theme = theme
                 )
             )
         }
@@ -146,5 +159,6 @@ class ShowHabitPresenter(
     interface Screen :
         BarCardPresenter.Screen,
         ScoreCardPresenter.Screen,
-        HistoryCardPresenter.Screen
+        HistoryCardPresenter.Screen,
+        DailyPerformanceCardPresenter.Screen
 }

@@ -1,0 +1,112 @@
+# Installation Guide - Auto-Refresh Daily Performance
+
+## APK Information:
+- **File**: uHabits-AutoRefresh-20250807-2342-debug.apk
+- **Size**: ~29MB
+- **Version**: Auto-Refresh Debug Build
+- **Fix Date**: August 7, 2025
+
+## What's Fixed:
+✅ **Daily performance dashboard now updates automatically and instantly!**
+
+## Installation Steps:
+
+### 1. Install the Updated APK:
+- Download the APK file to your Android device
+- Enable "Install from unknown sources" if prompted
+- Tap the APK file to install
+- Allow installation when prompted
+
+### 2. Verify Auto-Refresh Works:
+- Open uHabits app
+- Look for the "Daily Performance" card at the top of main screen
+- Note your current daily score (e.g., 45)
+- **Complete any habit** by checking it off ✅
+- **IMMEDIATELY** see your daily score update (e.g., jumps to 67)
+
+## How to Test Real-Time Updates:
+
+### **Test 1: Habit Completion**
+1. Open the app and note your current score
+2. Check off a habit ✅
+3. **Instantly** see the dashboard update:
+   - Score increases
+   - Yesterday comparison changes
+   - Mini chart updates
+   - Category may change (Poor → Average → Good → Excellent)
+
+### **Test 2: Multiple Habits**
+1. Complete several habits in a row
+2. Watch the score climb with each completion
+3. See the performance category improve in real-time
+4. Notice the "vs Yesterday" trend update
+
+### **Test 3: Uncheck and Recheck**
+1. Uncheck a completed habit ❌
+2. Watch score decrease immediately
+3. Check it again ✅
+4. See score return to previous level
+
+### **Test 4: Day Rollover**
+- At midnight, dashboard automatically refreshes
+- Today's score becomes yesterday's reference
+- New day starts with fresh scoring
+
+## Expected Behavior:
+
+### **Real-Time Elements:**
+- **Today's Score**: Updates instantly with habit changes
+- **Performance Category**: Changes immediately (Poor/Average/Good/Excellent)  
+- **Completion Count**: Shows accurate "X/Y" habits completed
+- **Yesterday Comparison**: Updates with trend arrows (↗ ↘ →)
+- **Weekly Average**: Recalculates as you complete habits
+- **Mini Chart**: Refreshes to show current day's progress
+
+### **Update Triggers:**
+- ✅ Checking/unchecking habits
+- ➕ Adding new habits
+- ❌ Deleting habits
+- ✏️ Editing habit details
+- ⏰ Day changes (midnight)
+- 🔄 App resume/refresh
+
+## Troubleshooting:
+
+### **Dashboard Not Updating?**
+1. Force close and reopen the app
+2. Check that you have active (non-archived) habits
+3. Verify the habit you're checking is actually being marked complete
+4. Try completing a different habit to test
+
+### **Score Still Shows "---"?**
+- This means you have no active habits
+- Create at least one habit first
+- Dashboard will start showing scores once habits exist
+
+### **Performance Seems Wrong?**
+- Score is calculated across ALL active habits
+- Numerical habits get partial credit based on target achievement
+- Bonus points are awarded for streaks and consistency
+- Weekend completions get bonus points
+
+## Key Improvements:
+
+### **Before This Fix:**
+- Dashboard showed stale/outdated data
+- Had to restart app to see habit completion effects
+- Score didn't reflect current daily progress
+- Frustrating user experience
+
+### **After This Fix:**
+- **Instant feedback** when completing habits
+- **Live score tracking** throughout the day
+- **Real-time performance metrics**
+- **Automatic updates** - no manual refresh needed
+
+## Support:
+The auto-refresh functionality is now built into the daily performance dashboard. Your scores and statistics will update immediately as you interact with your habits throughout the day.
+
+**Enjoy your real-time habit tracking!** 🎉
+
+---
+*Auto-refresh installation guide for enhanced daily performance dashboard*

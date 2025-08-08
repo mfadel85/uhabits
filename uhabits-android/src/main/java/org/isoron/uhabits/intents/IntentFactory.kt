@@ -53,7 +53,7 @@ class IntentFactory
 
     fun startAboutActivity(context: Context) =
         Intent(context, AboutActivity::class.java)
-        
+
     fun startAnalyticsActivity(context: Context) =
         Intent(context, org.isoron.uhabits.activities.analytics.AnalyticsActivity::class.java)
 

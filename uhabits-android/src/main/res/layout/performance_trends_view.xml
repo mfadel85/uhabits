@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Performance Trends"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="?android:textColorPrimary"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Trend Indicators -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trend"
+                android:textSize="12sp"
+                android:textColor="?android:textColorSecondary" />
+
+            <TextView
+                android:id="@+id/trendDirectionText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="↗ Improving"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/trendPercentageText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+12.5%"
+                android:textSize="12sp"
+                android:textColor="?android:textColorSecondary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Current Streak"
+                android:textSize="12sp"
+                android:textColor="?android:textColorSecondary" />
+
+            <TextView
+                android:id="@+id/currentStreakText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="7 days"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="?android:textColorPrimary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Best Streak"
+                android:textSize="12sp"
+                android:textColor="?android:textColorSecondary" />
+
+            <TextView
+                android:id="@+id/longestStreakText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="21 days"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="?android:textColorPrimary" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Performance Metrics -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Consistency"
+                android:textSize="12sp"
+                android:textColor="?android:textColorSecondary" />
+
+            <TextView
+                android:id="@+id/consistencyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="78.5%"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="?android:textColorPrimary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Volatility"
+                android:textSize="12sp"
+                android:textColor="?android:textColorSecondary" />
+
+            <TextView
+                android:id="@+id/volatilityText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15.2"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="?android:textColorPrimary" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Trend Chart -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="90-Day Performance Trend"
+        android:textSize="12sp"
+        android:textColor="?android:textColorSecondary"
+        android:layout_marginBottom="8dp" />
+
+    <org.isoron.uhabits.activities.habits.performance.views.TrendChart
+        android:id="@+id/trendChart"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:background="?android:selectableItemBackground" />
+
+</LinearLayout>

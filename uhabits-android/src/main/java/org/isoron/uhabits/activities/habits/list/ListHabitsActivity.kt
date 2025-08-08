@@ -35,6 +35,10 @@ import kotlinx.coroutines.Dispatchers
 import org.isoron.uhabits.BaseExceptionHandler
 import org.isoron.uhabits.HabitsApplication
 import org.isoron.uhabits.activities.habits.list.views.HabitCardListAdapter
+import org.isoron.uhabits.core.commands.Command
+import org.isoron.uhabits.core.commands.CommandRunner
+import org.isoron.uhabits.core.models.DailyScore
+import org.isoron.uhabits.core.models.DailyScoreCalculator
 import org.isoron.uhabits.core.models.Timestamp
 import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.tasks.TaskRunner
@@ -49,7 +53,7 @@ import org.isoron.uhabits.utils.applyRootViewInsets
 import org.isoron.uhabits.utils.dismissCurrentDialog
 import org.isoron.uhabits.utils.restartWithFade
 
-class ListHabitsActivity : AppCompatActivity(), Preferences.Listener {
+class ListHabitsActivity : AppCompatActivity(), Preferences.Listener, CommandRunner.Listener {
 
     var pureBlack: Boolean = false
     lateinit var appComponent: HabitsApplicationComponent
@@ -60,6 +64,7 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener {
     lateinit var screen: ListHabitsScreen
     lateinit var prefs: Preferences
     lateinit var midnightTimer: MidnightTimer
+    private lateinit var dailyScoreCalculator: DailyScoreCalculator
     private val scope = CoroutineScope(Dispatchers.Main)
 
     private var permissionAlreadyRequested = false
@@ -98,9 +103,11 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener {
         screen = component.listHabitsScreen
         adapter = component.habitCardListAdapter
         taskRunner = appComponent.taskRunner
+        dailyScoreCalculator = DailyScoreCalculator(appComponent.habitList)
         menu = component.listHabitsMenu
         Thread.setDefaultUncaughtExceptionHandler(BaseExceptionHandler(this))
         component.listHabitsBehavior.onStartup()
+        appComponent.commandRunner.addListener(this)
         rootView.applyRootViewInsets()
         setContentView(rootView)
     }
@@ -109,6 +116,7 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener {
         midnightTimer.onPause()
         screen.onDetached()
         adapter.cancelRefresh()
+        appComponent.commandRunner.removeListener(this)
         dismissCurrentDialog()
         super.onPause()
     }
@@ -118,6 +126,8 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener {
         screen.onAttached()
         rootView.postInvalidate()
         midnightTimer.onResume()
+        appComponent.commandRunner.addListener(this)
+        updateGlobalPerformanceData()
 
         if (appComponent.reminderScheduler.hasHabitsWithReminders()) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -189,6 +199,21 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
+    }
+
+    private fun updateGlobalPerformanceData() {
+        taskRunner.run {
+            val dailyScores = dailyScoreCalculator.getLast30Days()
+            runOnUiThread {
+                rootView.updateGlobalPerformance(dailyScores)
+            }
+        }
+    }
+
+    override fun onCommandFinished(command: Command) {
+        // Refresh the global performance dashboard when any command finishes
+        // This includes habit check/uncheck, habit creation/deletion, etc.
+        updateGlobalPerformanceData()
     }
 
     companion object {

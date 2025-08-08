@@ -94,4 +94,10 @@
         <item>51</item>
         <item>0</item>
     </string-array>
+
+    <string-array name="daily_performance_spinner_items">
+        <item>Last 7 Days</item>
+        <item>Last 30 Days</item>
+        <item>Last 12 Weeks</item>
+    </string-array>
 </resources>

@@ -1,0 +1,71 @@
+# Installation Guide
+
+## 🚀 Quick Install
+
+### For Android Devices
+
+1. **Download the APK**
+   - Choose either the debug or release version
+   - **Recommended**: `uHabits-DailyPerformance-20250807-2229-release.apk`
+
+2. **Enable Unknown Sources**
+   - Go to Android Settings > Security (or Privacy)
+   - Enable "Unknown sources" or "Install unknown apps"
+   - Grant permission to your file manager or browser
+
+3. **Install the APK**
+   - Tap the downloaded APK file
+   - Follow the installation prompts
+   - Grant requested permissions
+
+4. **Launch the App**
+   - Find "uHabits" in your app drawer
+   - Open the app and start creating habits
+   - Navigate to any habit to see the new Daily Performance charts!
+
+## 🔧 Troubleshooting
+
+### Installation Issues
+- **"Parse Error"**: Download the file again, it may be corrupted
+- **"App not installed"**: Make sure you have enough storage space
+- **"Unknown sources blocked"**: Check your security settings
+
+### Performance Issues
+- **Slow loading**: The initial calculation may take a moment for extensive habit histories
+- **Chart not showing**: Make sure you have some habit data recorded
+
+### Permissions
+The app may request:
+- **Storage**: For data backup/restore
+- **Notifications**: For habit reminders
+
+## 📱 System Requirements
+
+- **Android Version**: 5.0 (API 21) or higher
+- **RAM**: 2GB recommended
+- **Storage**: 50MB free space
+- **Screen**: Works on phones and tablets
+
+## 🎯 First Steps
+
+1. **Create Your First Habit**
+   - Tap the "+" button
+   - Enter habit name and details
+   - Set your target and frequency
+
+2. **Record Some Data**
+   - Mark habits as complete for a few days
+   - The more data you have, the better the performance analysis
+
+3. **View Performance**
+   - Open any habit
+   - Scroll down to see "📊 Daily Performance"
+   - Switch between time periods using the dropdown
+
+4. **Analyze Your Progress**
+   - Check your performance trends
+   - See your best and worst days
+   - Use insights to improve your habits!
+
+---
+**Need help? Check the app's built-in help or visit the project repository.**

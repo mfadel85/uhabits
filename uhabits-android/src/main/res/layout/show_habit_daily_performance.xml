@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2025 Enhanced by mfadel85
+  ~ 
+  ~ Layout for Daily Performance Card
+  -->
+
+<androidx.cardview.widget.CardView 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="8dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📊 Daily Performance"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="?attr/contrast80" />
+
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/daily_performance_spinner_items" />
+
+        </LinearLayout>
+
+        <!-- Performance Chart -->
+        <org.isoron.uhabits.activities.common.views.DailyPerformanceChart
+            android:id="@+id/performance_chart"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Current Performance Stats -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <!-- Current Score -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today's Score"
+                    android:textSize="12sp"
+                    android:textColor="?attr/contrast60" />
+
+                <TextView
+                    android:id="@+id/current_score_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="85.0"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    tools:textColor="#4CAF50" />
+
+                <TextView
+                    android:id="@+id/current_score_category"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Excellent"
+                    android:textSize="10sp"
+                    android:textColor="?attr/contrast60" />
+
+            </LinearLayout>
+
+            <!-- Completion Rate -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Completion Rate"
+                    android:textSize="12sp"
+                    android:textColor="?attr/contrast60" />
+
+                <TextView
+                    android:id="@+id/completion_rate_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="75%"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/contrast80" />
+
+                <ProgressBar
+                    android:id="@+id/completion_rate_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="60dp"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="4dp"
+                    android:max="100"
+                    android:progress="75" />
+
+            </LinearLayout>
+
+            <!-- Habits Completed -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Habits Done"
+                    android:textSize="12sp"
+                    android:textColor="?attr/contrast60" />
+
+                <TextView
+                    android:id="@+id/habits_completed_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="6/8"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/contrast80" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Trend Indicators -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:gravity="center">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/weekly_trend_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="↗"
+                    android:textSize="16sp"
+                    android:layout_marginEnd="4dp"
+                    tools:textColor="#4CAF50" />
+
+                <TextView
+                    android:id="@+id/weekly_trend_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Weekly ↗"
+                    android:textSize="12sp"
+                    tools:textColor="#4CAF50" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/monthly_trend_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="→"
+                    android:textSize="16sp"
+                    android:layout_marginEnd="4dp"
+                    tools:textColor="#FF9800" />
+
+                <TextView
+                    android:id="@+id/monthly_trend_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Monthly →"
+                    android:textSize="12sp"
+                    tools:textColor="#FF9800" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Statistics Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <!-- Average Score -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Average"
+                    android:textSize="12sp"
+                    android:textColor="?attr/contrast60" />
+
+                <TextView
+                    android:id="@+id/average_score_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="78.5"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/contrast80" />
+
+            </LinearLayout>
+
+            <!-- Total Days -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Days Tracked"
+                    android:textSize="12sp"
+                    android:textColor="?attr/contrast60" />
+
+                <TextView
+                    android:id="@+id/total_days_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/contrast80" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Best/Worst Day Section -->
+        <LinearLayout
+            android:id="@+id/daily_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:visibility="visible">
+
+            <!-- Best Day -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏆 Best Day"
+                    android:textSize="12sp"
+                    android:textColor="?attr/contrast60" />
+
+                <TextView
+                    android:id="@+id/best_day_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="95.0"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:textColor="#4CAF50" />
+
+                <TextView
+                    android:id="@+id/best_day_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Jan 15"
+                    android:textSize="10sp"
+                    android:textColor="?attr/contrast60" />
+
+            </LinearLayout>
+
+            <!-- Worst Day -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📉 Worst Day"
+                    android:textSize="12sp"
+                    android:textColor="?attr/contrast60" />
+
+                <TextView
+                    android:id="@+id/worst_day_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="45.0"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:textColor="#F44336" />
+
+                <TextView
+                    android:id="@+id/worst_day_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Jan 08"
+                    android:textSize="10sp"
+                    android:textColor="?attr/contrast60" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Weekly Section (for weekly view) -->
+        <LinearLayout
+            android:id="@+id/weekly_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📅 Weekly Performance Overview"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="?attr/contrast80"
+                android:layout_gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Each point represents weekly average performance"
+                android:textSize="12sp"
+                android:textColor="?attr/contrast60"
+                android:layout_gravity="center"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

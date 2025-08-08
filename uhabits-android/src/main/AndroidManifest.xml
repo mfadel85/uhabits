@@ -131,6 +131,14 @@
         </activity>
 
         <activity
+            android:name=".activities.habits.performance.DailyPerformanceDetailsActivity"
+            android:label="Daily Performance Details">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.habits.list.ListHabitsActivity" />
+        </activity>
+
+        <activity
             android:name=".notifications.SnoozeDelayPickerActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"

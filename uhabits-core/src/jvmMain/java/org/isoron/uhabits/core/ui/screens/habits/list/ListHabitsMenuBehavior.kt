@@ -44,7 +44,7 @@ class ListHabitsMenuBehavior @Inject constructor(
     fun onViewAbout() {
         screen.showAboutScreen()
     }
-    
+
     fun onViewAnalytics() {
         screen.showAnalyticsScreen()
     }
