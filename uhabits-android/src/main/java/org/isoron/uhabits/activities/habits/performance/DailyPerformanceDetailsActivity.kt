@@ -15,19 +15,13 @@ import androidx.appcompat.app.AppCompatActivity
 import org.isoron.uhabits.HabitsApplication
 import org.isoron.uhabits.core.models.DailyScore
 import org.isoron.uhabits.core.models.DailyScoreCalculator
-import org.isoron.uhabits.core.models.PaletteColor
-import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.tasks.TaskRunner
 import org.isoron.uhabits.core.utils.DateUtils
-import org.isoron.uhabits.inject.ActivityContext
 import org.isoron.uhabits.inject.ActivityContextModule
-import org.isoron.uhabits.inject.ActivityScope
 import org.isoron.uhabits.inject.DaggerHabitsActivityComponent
 import org.isoron.uhabits.inject.HabitsActivityComponent
 import org.isoron.uhabits.inject.HabitsApplicationComponent
 import org.isoron.uhabits.utils.applyRootViewInsets
-import org.isoron.uhabits.utils.currentTheme
-import javax.inject.Inject
 
 class DailyPerformanceDetailsActivity : AppCompatActivity() {
 
@@ -51,10 +45,10 @@ class DailyPerformanceDetailsActivity : AppCompatActivity() {
         taskRunner = appComponent.taskRunner
         dailyScoreCalculator = DailyScoreCalculator(appComponent.habitList)
         rootView = DailyPerformanceDetailsRootView(this, dailyScoreCalculator, taskRunner)
-        
+
         rootView.applyRootViewInsets()
         setContentView(rootView)
-        
+
         loadPerformanceData()
     }
 
@@ -63,7 +57,7 @@ class DailyPerformanceDetailsActivity : AppCompatActivity() {
             val last90Days = dailyScoreCalculator.getLast90Days()
             val monthlyStats = calculateMonthlyStats(last90Days)
             val weeklyStats = dailyScoreCalculator.getWeeklyAverages()
-            
+
             runOnUiThread {
                 rootView.setPerformanceData(last90Days, monthlyStats, weeklyStats)
             }

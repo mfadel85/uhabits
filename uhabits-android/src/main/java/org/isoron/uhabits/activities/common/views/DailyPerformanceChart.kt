@@ -232,20 +232,20 @@ class DailyPerformanceChart : ScrollableChart {
         path.moveTo(padding, height - padding)
 
         // Draw to first point
-        val firstY = padding + chartHeight * (1 - (dailyScores[0].score - minScore) / (maxScore - minScore)).toFloat()
+        val firstY = padding + chartHeight * (1 - (dailyScores[0].weightedScore - minScore) / (maxScore - minScore)).toFloat()
         path.lineTo(padding, firstY)
 
         // Draw curve through all points
         for (i in dailyScores.indices) {
             val x = padding + (chartWidth * i / (dailyScores.size - 1))
-            val y = padding + chartHeight * (1 - (dailyScores[i].score - minScore) / (maxScore - minScore)).toFloat()
+            val y = padding + chartHeight * (1 - (dailyScores[i].weightedScore - minScore) / (maxScore - minScore)).toFloat()
 
             if (i == 0) {
                 path.lineTo(x, y)
             } else {
                 // Smooth curve
                 val prevX = padding + (chartWidth * (i - 1) / (dailyScores.size - 1))
-                val prevY = padding + chartHeight * (1 - (dailyScores[i - 1].score - minScore) / (maxScore - minScore)).toFloat()
+                val prevY = padding + chartHeight * (1 - (dailyScores[i - 1].weightedScore - minScore) / (maxScore - minScore)).toFloat()
 
                 val controlX1 = prevX + (x - prevX) * 0.3f
                 val controlX2 = prevX + (x - prevX) * 0.7f
@@ -278,7 +278,7 @@ class DailyPerformanceChart : ScrollableChart {
 
         for (i in dailyScores.indices) {
             val x = padding + (chartWidth * i / (dailyScores.size - 1))
-            val y = padding + chartHeight * (1 - (dailyScores[i].score - minScore) / (maxScore - minScore)).toFloat()
+            val y = padding + chartHeight * (1 - (dailyScores[i].weightedScore - minScore) / (maxScore - minScore)).toFloat()
 
             if (i == 0) {
                 path.moveTo(x, y)
@@ -340,10 +340,10 @@ class DailyPerformanceChart : ScrollableChart {
 
         for (i in dailyScores.indices) {
             val x = padding + (chartWidth * i / max(1, dailyScores.size - 1))
-            val y = padding + chartHeight * (1 - (dailyScores[i].score - minScore) / (maxScore - minScore)).toFloat()
+            val y = padding + chartHeight * (1 - (dailyScores[i].weightedScore - minScore) / (maxScore - minScore)).toFloat()
 
-            // Color based on score category
-            val pointColor = when (dailyScores[i].category) {
+            // Color based on weighted score category
+            val pointColor = when (dailyScores[i].weightedCategory) {
                 DailyScore.ScoreCategory.EXCELLENT -> Color.parseColor("#4CAF50") // Green
                 DailyScore.ScoreCategory.GOOD -> Color.parseColor("#8BC34A") // Light Green
                 DailyScore.ScoreCategory.AVERAGE -> Color.parseColor("#FF9800") // Orange
@@ -441,9 +441,9 @@ class DailyPerformanceChart : ScrollableChart {
         if (minDistance < baseSize) {
             val score = dailyScores[closestIndex]
             return "${dateFormat.format(score.timestamp.toJavaDate())}\n" +
-                "Score: ${scoreFormat.format(score.score)}\n" +
+                "Score: ${scoreFormat.format(score.weightedScore)}\n" +
                 "Completed: ${score.completedHabits}/${score.totalHabits}\n" +
-                "Category: ${score.category.name.lowercase().replaceFirstChar { it.uppercase() }}"
+                "Category: ${score.weightedCategory.name.lowercase().replaceFirstChar { it.uppercase() }}"
         }
 
         return null

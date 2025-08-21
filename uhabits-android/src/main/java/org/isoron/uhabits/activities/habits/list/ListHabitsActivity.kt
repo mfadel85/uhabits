@@ -37,7 +37,6 @@ import org.isoron.uhabits.HabitsApplication
 import org.isoron.uhabits.activities.habits.list.views.HabitCardListAdapter
 import org.isoron.uhabits.core.commands.Command
 import org.isoron.uhabits.core.commands.CommandRunner
-import org.isoron.uhabits.core.models.DailyScore
 import org.isoron.uhabits.core.models.DailyScoreCalculator
 import org.isoron.uhabits.core.models.Timestamp
 import org.isoron.uhabits.core.preferences.Preferences

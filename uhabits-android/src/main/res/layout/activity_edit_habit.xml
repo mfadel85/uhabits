@@ -124,6 +124,63 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- Habit Priority -->
+            <FrameLayout style="@style/FormOuterBox">
+                <LinearLayout style="@style/FormInnerBox">
+                    <TextView
+                        style="@style/FormLabel"
+                        android:text="@string/priority" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginRight="16dp">
+                        
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/priorityHighButton"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:text="🔥 High"
+                            android:textSize="12sp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            app:backgroundTint="@color/red_200" />
+                            
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/priorityNormalButton"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="4dp"
+                            android:text="📝 Normal"
+                            android:textSize="12sp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            app:backgroundTint="@color/blue_200" />
+                            
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/priorityLowButton"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:text="🌱 Low"
+                            android:textSize="12sp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            app:backgroundTint="@color/green_200" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
             <!-- Habit Question -->
             <FrameLayout style="@style/FormOuterBox">
                 <LinearLayout style="@style/FormInnerBox">

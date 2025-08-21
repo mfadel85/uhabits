@@ -23,7 +23,6 @@ import org.isoron.uhabits.core.models.DailyScore
 import org.isoron.uhabits.core.models.DailyScoreCalculator
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.tasks.TaskRunner
-import org.isoron.uhabits.utils.addAtBottom
 import org.isoron.uhabits.utils.addAtTop
 import org.isoron.uhabits.utils.addBelow
 import org.isoron.uhabits.utils.buildToolbar
@@ -65,21 +64,33 @@ class DailyPerformanceDetailsRootView(
 
         // Add sections to content layout
         contentLayout.apply {
-            addView(performanceStatsView, LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(16f).toInt())
-            })
-            
-            addView(performanceCalendarView, LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(16f).toInt())
-            })
-            
-            addView(performanceTrendsView, LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(16f).toInt())
-            })
-            
-            addView(monthlyPerformanceView, LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(24f).toInt())
-            })
+            addView(
+                performanceStatsView,
+                LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(16f).toInt())
+                }
+            )
+
+            addView(
+                performanceCalendarView,
+                LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(16f).toInt())
+                }
+            )
+
+            addView(
+                performanceTrendsView,
+                LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(16f).toInt())
+                }
+            )
+
+            addView(
+                monthlyPerformanceView,
+                LinearLayout.LayoutParams(MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(dp(16f).toInt(), 0, dp(16f).toInt(), dp(24f).toInt())
+                }
+            )
         }
 
         scrollView.addView(contentLayout, MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -94,7 +105,7 @@ class DailyPerformanceDetailsRootView(
             displayHomeAsUpEnabled = true,
             theme = currentTheme()
         )
-        
+
         toolbar.setNavigationOnClickListener {
             (context as? DailyPerformanceDetailsActivity)?.finish()
         }

@@ -29,6 +29,7 @@ data class Habit(
     var isArchived: Boolean = false,
     var name: String = "",
     var position: Int = 0,
+    var priority: HabitPriority = HabitPriority.NORMAL,
     var question: String = "",
     var reminder: Reminder? = null,
     var targetType: NumericalHabitType = NumericalHabitType.AT_LEAST,

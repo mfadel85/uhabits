@@ -75,7 +75,14 @@ class DailyPerformanceCardPresenter(
                     DailyScore(
                         timestamp = date,
                         score = score,
+                        weightedScore = score, // For individual habit, weighted = normal score
                         category = when {
+                            score >= 80.0 -> DailyScore.ScoreCategory.EXCELLENT
+                            score >= 60.0 -> DailyScore.ScoreCategory.GOOD
+                            score >= 40.0 -> DailyScore.ScoreCategory.AVERAGE
+                            else -> DailyScore.ScoreCategory.POOR
+                        },
+                        weightedCategory = when {
                             score >= 80.0 -> DailyScore.ScoreCategory.EXCELLENT
                             score >= 60.0 -> DailyScore.ScoreCategory.GOOD
                             score >= 40.0 -> DailyScore.ScoreCategory.AVERAGE
@@ -91,7 +98,9 @@ class DailyPerformanceCardPresenter(
             val currentScore = dailyScores.lastOrNull() ?: DailyScore(
                 timestamp = today,
                 score = 0.0,
+                weightedScore = 0.0,
                 category = DailyScore.ScoreCategory.POOR,
+                weightedCategory = DailyScore.ScoreCategory.POOR,
                 completedHabits = 0,
                 totalHabits = 1,
                 skippedHabits = 0

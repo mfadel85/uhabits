@@ -10,7 +10,6 @@ package org.isoron.uhabits.activities.habits.list.views
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -23,7 +22,6 @@ import androidx.core.content.ContextCompat
 import org.isoron.uhabits.R
 import org.isoron.uhabits.core.models.DailyScore
 import org.isoron.uhabits.core.utils.DateUtils
-import org.isoron.uhabits.utils.InterfaceUtils
 import org.isoron.uhabits.utils.StyledResources
 import org.isoron.uhabits.utils.dp
 import kotlin.math.roundToInt
@@ -59,40 +57,43 @@ class GlobalDailyPerformanceView @JvmOverloads constructor(
         todayCompletedText = findViewById(R.id.todayCompletedText)
         yesterdayComparisonText = findViewById(R.id.yesterdayComparisonText)
         weeklyAverageText = findViewById(R.id.weeklyAverageText)
-        
+
         // Setup View Details click handler
         val viewDetailsText = findViewById<TextView>(R.id.viewDetailsText)
         viewDetailsText.setOnClickListener {
             openDetailedPerformanceView()
         }
-        
+
         // Create and replace mini chart view
         val chartContainer = findViewById<View>(R.id.miniChart).parent as LinearLayout
         miniChart = MiniChartView(context)
         chartContainer.removeView(findViewById(R.id.miniChart))
-        chartContainer.addView(miniChart, LinearLayout.LayoutParams(dp(120f).toInt(), dp(40f).toInt()).apply {
-            topMargin = dp(4f).toInt()
-        })
-        
+        chartContainer.addView(
+            miniChart,
+            LinearLayout.LayoutParams(dp(120f).toInt(), dp(40f).toInt()).apply {
+                topMargin = dp(4f).toInt()
+            }
+        )
+
         miniChart.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
     }
 
     fun setDailyScores(scores: List<DailyScore>) {
         this.dailyScores = scores.take(7) // Last 7 days for mini chart
-        
+
         val today = DateUtils.getTodayWithOffset()
         val yesterday = today.minus(1)
-        
+
         todayScore = scores.find { it.timestamp == today }
         yesterdayScore = scores.find { it.timestamp == yesterday }
-        
+
         // Calculate weekly average
         weeklyAverage = if (scores.isNotEmpty()) {
             scores.take(7).map { it.score }.average()
         } else {
             0.0
         }
-        
+
         refreshData()
     }
 
@@ -104,10 +105,10 @@ class GlobalDailyPerformanceView @JvmOverloads constructor(
     private fun refreshData() {
         // Update today's score
         todayScore?.let { score ->
-            todayScoreText.text = "${score.score.roundToInt()}"
-            todayScoreCategory.text = getCategoryText(score.category)
-            todayScoreCategory.setTextColor(getCategoryColor(score.category))
-            
+            todayScoreText.text = "${score.weightedScore.roundToInt()}"
+            todayScoreCategory.text = getCategoryText(score.weightedCategory)
+            todayScoreCategory.setTextColor(getCategoryColor(score.weightedCategory))
+
             todayCompletedText.text = "${score.completedHabits}/${score.totalHabits}"
         } ?: run {
             todayScoreText.text = "---"
@@ -122,7 +123,7 @@ class GlobalDailyPerformanceView @JvmOverloads constructor(
 
         // Update weekly average
         weeklyAverageText.text = "${weeklyAverage.roundToInt()}"
-        
+
         // Update mini chart
         miniChart.invalidate()
     }
@@ -130,7 +131,7 @@ class GlobalDailyPerformanceView @JvmOverloads constructor(
     private fun getYesterdayComparison(): Pair<String, Int> {
         val today = todayScore?.score ?: 0.0
         val yesterday = yesterdayScore?.score ?: 0.0
-        
+
         return when {
             today > yesterday -> {
                 val diff = today - yesterday
@@ -188,13 +189,13 @@ class GlobalDailyPerformanceView @JvmOverloads constructor(
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
-            
+
             if (dailyScores.isEmpty()) return
 
             val padding = dp(8f)
             val chartWidth = width - 2 * padding
             val chartHeight = height - 2 * padding
-            
+
             if (chartWidth <= 0 || chartHeight <= 0) return
 
             // Draw bars for each day
@@ -202,14 +203,14 @@ class GlobalDailyPerformanceView @JvmOverloads constructor(
             val maxScore = 100.0
 
             dailyScores.forEachIndexed { index, score ->
-                val barHeight = (chartHeight * (score.score / maxScore)).toFloat()
+                val barHeight = (chartHeight * (score.weightedScore / maxScore)).toFloat()
                 val left = padding + index * barWidth + barWidth * 0.2f
                 val right = padding + (index + 1) * barWidth - barWidth * 0.2f
                 val top = padding + chartHeight - barHeight
                 val bottom = padding + chartHeight
 
-                // Set color based on score category
-                paint.color = getCategoryColor(score.category)
+                // Set color based on weighted score category
+                paint.color = getCategoryColor(score.weightedCategory)
                 paint.alpha = 180
 
                 val rect = RectF(left, top, right, bottom)
@@ -219,7 +220,7 @@ class GlobalDailyPerformanceView @JvmOverloads constructor(
                 val res = StyledResources(context)
                 textPaint.color = res.getColor(R.attr.contrast80)
                 textPaint.textAlign = Paint.Align.CENTER
-                val scoreText = score.score.roundToInt().toString()
+                val scoreText = score.weightedScore.roundToInt().toString()
                 canvas.drawText(
                     scoreText,
                     left + (right - left) / 2,

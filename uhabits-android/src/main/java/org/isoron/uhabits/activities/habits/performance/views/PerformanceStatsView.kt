@@ -62,7 +62,7 @@ class PerformanceStatsView @JvmOverloads constructor(
             val currentMonth = monthlyStats.first()
             val previousMonth = monthlyStats[1]
             val improvement = currentMonth.averageScore - previousMonth.averageScore
-            
+
             val improvementText = findViewById<TextView>(R.id.monthlyImprovementText)
             improvementText.text = "${if (improvement >= 0) "+" else ""}${"%.1f".format(improvement)}"
         }

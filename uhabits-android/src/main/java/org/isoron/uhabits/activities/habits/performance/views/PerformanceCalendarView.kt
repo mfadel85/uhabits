@@ -20,7 +20,6 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import org.isoron.uhabits.R
 import org.isoron.uhabits.core.models.DailyScore
-import org.isoron.uhabits.core.utils.DateUtils
 import org.isoron.uhabits.utils.dp
 import java.text.SimpleDateFormat
 import java.util.*
@@ -70,7 +69,7 @@ class CalendarGridView @JvmOverloads constructor(
         textSize = dp(12f)
         textAlign = Paint.Align.CENTER
     }
-    
+
     private var dailyScores: List<DailyScore> = emptyList()
     private val scoreMap = mutableMapOf<String, DailyScore>()
 
@@ -87,43 +86,43 @@ class CalendarGridView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        
+
         val cellSize = width / 7f
         val rows = 6 // Max weeks in a month
-        
+
         val today = Calendar.getInstance()
         val currentMonth = today.get(Calendar.MONTH)
         val currentYear = today.get(Calendar.YEAR)
-        
+
         // Start from first day of month
         val firstDay = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_MONTH, 1)
             set(Calendar.MONTH, currentMonth)
             set(Calendar.YEAR, currentYear)
         }
-        
+
         // Get first day of week (0 = Sunday)
         val startDayOfWeek = firstDay.get(Calendar.DAY_OF_WEEK) - 1
-        
+
         // Draw calendar cells
         for (week in 0 until rows) {
             for (day in 0..6) {
                 val x = day * cellSize
                 val y = week * cellSize
-                
+
                 val cellDate = Calendar.getInstance().apply {
                     time = firstDay.time
                     add(Calendar.DAY_OF_MONTH, week * 7 + day - startDayOfWeek)
                 }
-                
+
                 val rect = RectF(x, y, x + cellSize, y + cellSize)
-                
+
                 // Only draw days in current month
                 if (cellDate.get(Calendar.MONTH) == currentMonth) {
                     val dayOfMonth = cellDate.get(Calendar.DAY_OF_MONTH)
                     val key = "${cellDate.get(Calendar.YEAR)}-${cellDate.get(Calendar.MONTH)}-$dayOfMonth"
                     val score = scoreMap[key]
-                    
+
                     // Draw cell background based on score
                     cellPaint.color = if (score != null) {
                         when (DailyScore.getCategory(score.score)) {
@@ -136,9 +135,9 @@ class CalendarGridView @JvmOverloads constructor(
                     } else {
                         ContextCompat.getColor(context, R.color.grey_100)
                     }
-                    
+
                     canvas.drawRoundRect(rect, dp(4f), dp(4f), cellPaint)
-                    
+
                     // Draw day number
                     textPaint.color = ContextCompat.getColor(context, android.R.color.black)
                     canvas.drawText(
@@ -147,7 +146,7 @@ class CalendarGridView @JvmOverloads constructor(
                         y + cellSize / 2 + dp(4f),
                         textPaint
                     )
-                    
+
                     // Draw score if available
                     if (score != null) {
                         textPaint.textSize = dp(8f)

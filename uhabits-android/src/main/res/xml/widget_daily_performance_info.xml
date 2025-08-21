@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2025 Enhanced by mfadel85
+  ~
+  ~ Daily Performance Widget Configuration
+  -->
+
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minHeight="100dp"
+    android:minWidth="150dp"
+    android:minResizeWidth="100dp"
+    android:minResizeHeight="80dp"
+    android:initialLayout="@layout/widget_wrapper"
+    android:previewImage="@drawable/widget_preview_daily_performance"
+    android:resizeMode="vertical|horizontal"
+    android:updatePeriodMillis="3600000"
+    android:widgetCategory="home_screen"
+    android:description="@string/daily_performance_widget_description">
+
+</appwidget-provider>

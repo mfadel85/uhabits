@@ -46,9 +46,9 @@ class DailyPerformanceCardView(context: Context, attrs: AttributeSet) : LinearLa
         }
 
         // Update current score display
-        binding.currentScoreValue.text = scoreFormat.format(state.currentScore.score)
-        binding.currentScoreValue.setTextColor(getCategoryColor(state.currentScore.category))
-        binding.currentScoreCategory.text = state.currentScore.category.name.lowercase()
+        binding.currentScoreValue.text = scoreFormat.format(state.currentScore.weightedScore)
+        binding.currentScoreValue.setTextColor(getCategoryColor(state.currentScore.weightedCategory))
+        binding.currentScoreCategory.text = state.currentScore.weightedCategory.name.lowercase()
             .replaceFirstChar { it.uppercase() }
 
         // Update completion rate
@@ -69,15 +69,15 @@ class DailyPerformanceCardView(context: Context, attrs: AttributeSet) : LinearLa
 
         // Update best/worst day
         state.bestDay?.let { best ->
-            binding.bestDayScore.text = scoreFormat.format(best.score)
-            binding.bestDayScore.setTextColor(getCategoryColor(best.category))
+            binding.bestDayScore.text = scoreFormat.format(best.weightedScore)
+            binding.bestDayScore.setTextColor(getCategoryColor(best.weightedCategory))
             binding.bestDayDate.text = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
                 .format(best.timestamp.toJavaDate())
         }
 
         state.worstDay?.let { worst ->
-            binding.worstDayScore.text = scoreFormat.format(worst.score)
-            binding.worstDayScore.setTextColor(getCategoryColor(worst.category))
+            binding.worstDayScore.text = scoreFormat.format(worst.weightedScore)
+            binding.worstDayScore.setTextColor(getCategoryColor(worst.weightedCategory))
             binding.worstDayDate.text = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
                 .format(worst.timestamp.toJavaDate())
         }

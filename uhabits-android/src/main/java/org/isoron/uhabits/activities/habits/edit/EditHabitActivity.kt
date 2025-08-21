@@ -47,6 +47,7 @@ import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.HabitPriority
 import org.isoron.uhabits.core.models.NumericalHabitType
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.models.Reminder
@@ -85,6 +86,7 @@ class EditHabitActivity : AppCompatActivity() {
     var reminderMin = -1
     var reminderDays: WeekdayList = WeekdayList.EVERY_DAY
     var targetType = NumericalHabitType.AT_LEAST
+    var priority = HabitPriority.NORMAL
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
@@ -107,6 +109,7 @@ class EditHabitActivity : AppCompatActivity() {
             freqNum = habit.frequency.numerator
             freqDen = habit.frequency.denominator
             targetType = habit.targetType
+            priority = habit.priority
             habit.reminder?.let {
                 reminderHour = it.hour
                 reminderMin = it.minute
@@ -130,6 +133,7 @@ class EditHabitActivity : AppCompatActivity() {
             reminderHour = state.getInt("reminderHour")
             reminderMin = state.getInt("reminderMin")
             reminderDays = WeekdayList(state.getInt("reminderDays"))
+            priority = HabitPriority.fromOrdinal(state.getInt("priority"))
         }
 
         updateColors()
@@ -161,6 +165,9 @@ class EditHabitActivity : AppCompatActivity() {
             }
             picker.dismissCurrentAndShow(supportFragmentManager, "colorPicker")
         }
+
+        // Setup priority buttons
+        setupPriorityButtons()
 
         populateFrequency()
         binding.booleanFrequencyPicker.setOnClickListener {
@@ -272,6 +279,7 @@ class EditHabitActivity : AppCompatActivity() {
         habit.question = binding.questionInput.text.trim().toString()
         habit.description = binding.notesInput.text.trim().toString()
         habit.color = color
+        habit.priority = priority
         if (reminderHour >= 0) {
             habit.reminder = Reminder(reminderHour, reminderMin, reminderDays)
         } else {
@@ -316,6 +324,45 @@ class EditHabitActivity : AppCompatActivity() {
             }
         }
         return isValid
+    }
+
+    private fun setupPriorityButtons() {
+        updatePriorityButtons()
+        
+        binding.priorityHighButton.setOnClickListener {
+            priority = HabitPriority.HIGH
+            updatePriorityButtons()
+        }
+        
+        binding.priorityNormalButton.setOnClickListener {
+            priority = HabitPriority.NORMAL
+            updatePriorityButtons()
+        }
+        
+        binding.priorityLowButton.setOnClickListener {
+            priority = HabitPriority.LOW
+            updatePriorityButtons()
+        }
+    }
+
+    private fun updatePriorityButtons() {
+        // Reset all buttons to unselected state
+        binding.priorityHighButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.grey_300, theme))
+        binding.priorityNormalButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.grey_300, theme))
+        binding.priorityLowButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.grey_300, theme))
+        
+        // Highlight selected button
+        when (priority) {
+            HabitPriority.HIGH -> {
+                binding.priorityHighButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.red_300, theme))
+            }
+            HabitPriority.NORMAL -> {
+                binding.priorityNormalButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.blue_300, theme))
+            }
+            HabitPriority.LOW -> {
+                binding.priorityLowButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.green_300, theme))
+            }
+        }
     }
 
     private fun populateReminder() {
@@ -376,6 +423,7 @@ class EditHabitActivity : AppCompatActivity() {
             putInt("reminderHour", reminderHour)
             putInt("reminderMin", reminderMin)
             putInt("reminderDays", reminderDays.toInteger())
+            putInt("priority", priority.ordinal)
         }
     }
 }

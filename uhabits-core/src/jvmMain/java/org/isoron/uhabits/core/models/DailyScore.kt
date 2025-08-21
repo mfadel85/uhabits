@@ -19,10 +19,12 @@ import kotlin.math.roundToInt
 data class DailyScore(
     val timestamp: Timestamp,
     val score: Double,
+    val weightedScore: Double,
     val totalHabits: Int,
     val completedHabits: Int,
     val skippedHabits: Int,
-    val category: ScoreCategory
+    val category: ScoreCategory,
+    val weightedCategory: ScoreCategory
 ) {
     enum class ScoreCategory {
         EXCELLENT, // 80-100
@@ -60,14 +62,18 @@ class DailyScoreCalculator(private val habitList: HabitList) {
             return DailyScore(
                 timestamp = timestamp,
                 score = 0.0,
+                weightedScore = 0.0,
                 totalHabits = 0,
                 completedHabits = 0,
                 skippedHabits = 0,
-                category = DailyScore.ScoreCategory.POOR
+                category = DailyScore.ScoreCategory.POOR,
+                weightedCategory = DailyScore.ScoreCategory.POOR
             )
         }
 
         var totalScore = 0.0
+        var totalWeightedScore = 0.0
+        var totalWeight = 0.0
         var completedCount = 0
         var skippedCount = 0
         val totalCount = activeHabits.size()
@@ -76,21 +82,36 @@ class DailyScoreCalculator(private val habitList: HabitList) {
             val habit = activeHabits.getByPosition(i)
             val entry = habit.computedEntries.get(timestamp)
             val habitScore = habit.scores[timestamp].value
+            // Safe access to priority with fallback
+            val habitWeight = try {
+                habit.priority?.weight ?: 1.0
+            } catch (e: Exception) {
+                1.0 // Default weight if priority access fails
+            }
+
+            totalWeight += habitWeight
 
             when {
                 entry.value == Entry.YES_MANUAL || entry.value == Entry.YES_AUTO -> {
                     completedCount++
-                    // Weight by habit score for quality
-                    totalScore += habitScore * 100 + getCompletionBonus(habit, timestamp)
+                    val basePoints = habitScore * 100 + getCompletionBonus(habit, timestamp)
+                    // Unweighted score
+                    totalScore += basePoints
+                    // Weighted score
+                    totalWeightedScore += basePoints * habitWeight
                 }
                 entry.value == Entry.SKIP -> {
                     skippedCount++
-                    // Partial credit for skipped days
-                    totalScore += habitScore * 50
+                    val basePoints = habitScore * 50
+                    // Unweighted score
+                    totalScore += basePoints
+                    // Weighted score
+                    totalWeightedScore += basePoints * habitWeight
                 }
                 entry.value == Entry.NO || entry.value == Entry.UNKNOWN -> {
-                    // No points for missed habits
+                    // No points for missed habits (both weighted and unweighted)
                     totalScore += 0.0
+                    totalWeightedScore += 0.0
                 }
                 else -> {
                     // Numerical habits - check against target
@@ -98,18 +119,22 @@ class DailyScoreCalculator(private val habitList: HabitList) {
                         val targetMet = isTargetMet(habit, entry)
                         if (targetMet) {
                             completedCount++
-                            totalScore += habitScore * 100 + getCompletionBonus(habit, timestamp)
+                            val basePoints = habitScore * 100 + getCompletionBonus(habit, timestamp)
+                            totalScore += basePoints
+                            totalWeightedScore += basePoints * habitWeight
                         } else {
                             // Partial credit based on percentage completed
                             val partialCredit = calculatePartialCredit(habit, entry)
-                            totalScore += habitScore * partialCredit
+                            val basePoints = habitScore * partialCredit
+                            totalScore += basePoints
+                            totalWeightedScore += basePoints * habitWeight
                         }
                     }
                 }
             }
         }
 
-        // Calculate final score (0-100 scale)
+        // Calculate final scores (0-100 scale)
         val finalScore = if (totalCount > 0) {
             val baseScore = totalScore / totalCount
             val consistencyBonus = getConsistencyBonus(activeHabits, timestamp)
@@ -120,13 +145,25 @@ class DailyScoreCalculator(private val habitList: HabitList) {
             0.0
         }
 
+        val finalWeightedScore = if (totalWeight > 0) {
+            val baseWeightedScore = totalWeightedScore / totalWeight
+            val consistencyBonus = getConsistencyBonus(activeHabits, timestamp)
+            val streakBonus = getStreakBonus(activeHabits, timestamp)
+
+            min(100.0, baseWeightedScore + consistencyBonus + streakBonus)
+        } else {
+            0.0
+        }
+
         return DailyScore(
             timestamp = timestamp,
             score = finalScore,
+            weightedScore = finalWeightedScore,
             totalHabits = totalCount,
             completedHabits = completedCount,
             skippedHabits = skippedCount,
-            category = DailyScore.getCategory(finalScore)
+            category = DailyScore.getCategory(finalScore),
+            weightedCategory = DailyScore.getCategory(finalWeightedScore)
         )
     }
 
@@ -167,6 +204,7 @@ class DailyScoreCalculator(private val habitList: HabitList) {
 
             val dailyScores = calculateScoreRange(weekStart, weekEnd)
             val avgScore = dailyScores.map { it.score }.average()
+            val avgWeightedScore = dailyScores.map { it.weightedScore }.average()
             val totalHabits = dailyScores.maxOfOrNull { it.totalHabits } ?: 0
             val avgCompleted = dailyScores.map { it.completedHabits }.average().roundToInt()
             val avgSkipped = dailyScores.map { it.skippedHabits }.average().roundToInt()
@@ -175,10 +213,12 @@ class DailyScoreCalculator(private val habitList: HabitList) {
                 DailyScore(
                     timestamp = weekEnd, // Use end of week as timestamp
                     score = avgScore,
+                    weightedScore = avgWeightedScore,
                     totalHabits = totalHabits,
                     completedHabits = avgCompleted,
                     skippedHabits = avgSkipped,
-                    category = DailyScore.getCategory(avgScore)
+                    category = DailyScore.getCategory(avgScore),
+                    weightedCategory = DailyScore.getCategory(avgWeightedScore)
                 )
             )
         }
@@ -268,5 +308,53 @@ class DailyScoreCalculator(private val habitList: HabitList) {
         }
 
         return min(15.0, totalStreakBonus) // Max 15 point streak bonus
+    }
+
+    /**
+     * Get priority distribution for current habits
+     */
+    fun getPriorityDistribution(): Map<HabitPriority, Int> {
+        val activeHabits = habitList.getFiltered(
+            HabitMatcher(isArchivedAllowed = false)
+        )
+
+        val distribution = mutableMapOf<HabitPriority, Int>()
+        HabitPriority.values().forEach { priority ->
+            distribution[priority] = 0
+        }
+
+        for (i in 0 until activeHabits.size()) {
+            val habit = activeHabits.getByPosition(i)
+            val habitPriority = try {
+                habit.priority ?: HabitPriority.NORMAL
+            } catch (e: Exception) {
+                HabitPriority.NORMAL
+            }
+            distribution[habitPriority] = distribution[habitPriority]!! + 1
+        }
+
+        return distribution
+    }
+
+    /**
+     * Calculate total weight of all active habits
+     */
+    fun getTotalHabitWeight(): Double {
+        val activeHabits = habitList.getFiltered(
+            HabitMatcher(isArchivedAllowed = false)
+        )
+
+        var totalWeight = 0.0
+        for (i in 0 until activeHabits.size()) {
+            val habit = activeHabits.getByPosition(i)
+            val habitWeight = try {
+                habit.priority?.weight ?: 1.0
+            } catch (e: Exception) {
+                1.0 // Default weight if priority access fails
+            }
+            totalWeight += habitWeight
+        }
+
+        return totalWeight
     }
 }

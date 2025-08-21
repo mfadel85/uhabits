@@ -21,11 +21,9 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import org.isoron.uhabits.R
 import org.isoron.uhabits.core.models.DailyScore
-import org.isoron.uhabits.utils.StyledResources
 import org.isoron.uhabits.utils.dp
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.roundToInt
 
 class PerformanceTrendsView @JvmOverloads constructor(
     context: Context,
@@ -47,7 +45,7 @@ class PerformanceTrendsView @JvmOverloads constructor(
 
     private fun refreshData() {
         calculateTrends()
-        
+
         // Update trend chart
         val trendChart = findViewById<TrendChart>(R.id.trendChart)
         trendChart.setData(dailyScores)
@@ -68,7 +66,7 @@ class PerformanceTrendsView @JvmOverloads constructor(
         // Update trend indicators
         val trendDirectionText = findViewById<TextView>(R.id.trendDirectionText)
         val trendPercentageText = findViewById<TextView>(R.id.trendPercentageText)
-        
+
         when {
             trendDirection > 2 -> {
                 trendDirectionText.text = "↗ Improving"
@@ -83,14 +81,14 @@ class PerformanceTrendsView @JvmOverloads constructor(
                 trendDirectionText.setTextColor(ContextCompat.getColor(context, R.color.grey_600))
             }
         }
-        
+
         val percentageChange = if (previousAvg > 0) (trendDirection / previousAvg * 100) else 0.0
         trendPercentageText.text = "${if (percentageChange >= 0) "+" else ""}${"%.1f".format(percentageChange)}%"
 
         // Calculate streak information
         val currentStreak = calculateCurrentStreak()
         val longestStreak = calculateLongestStreak()
-        
+
         findViewById<TextView>(R.id.currentStreakText).text = "$currentStreak days"
         findViewById<TextView>(R.id.longestStreakText).text = "$longestStreak days"
 
@@ -118,7 +116,7 @@ class PerformanceTrendsView @JvmOverloads constructor(
     private fun calculateLongestStreak(): Int {
         var longestStreak = 0
         var currentStreak = 0
-        
+
         dailyScores.forEach { score ->
             if (score.score >= 70) {
                 currentStreak++
@@ -127,20 +125,20 @@ class PerformanceTrendsView @JvmOverloads constructor(
                 currentStreak = 0
             }
         }
-        
+
         return longestStreak
     }
 
     private fun calculateConsistency(): Double {
         if (dailyScores.isEmpty()) return 0.0
-        
+
         val goodDays = dailyScores.count { it.score >= 70 }
         return (goodDays.toDouble() / dailyScores.size) * 100
     }
 
     private fun calculateVolatility(): Double {
         if (dailyScores.size < 2) return 0.0
-        
+
         val scores = dailyScores.map { it.score }
         val mean = scores.average()
         val variance = scores.map { (it - mean) * (it - mean) }.average()
@@ -161,17 +159,17 @@ class TrendChart @JvmOverloads constructor(
         strokeWidth = dp(2f)
         style = Paint.Style.STROKE
     }
-    
+
     private val pointPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
-    
+
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         strokeWidth = dp(1f)
         style = Paint.Style.STROKE
         color = ContextCompat.getColor(context, R.color.grey_300)
     }
-    
+
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textSize = dp(10f)
         color = ContextCompat.getColor(context, R.color.grey_600)
@@ -211,7 +209,7 @@ class TrendChart @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        
+
         if (dailyScores.isEmpty()) {
             // Draw empty state
             val emptyText = "No data available"
@@ -239,7 +237,7 @@ class TrendChart @JvmOverloads constructor(
         for (i in 0..4) {
             val y = padding + (i.toFloat() / 4) * chartHeight
             canvas.drawLine(padding, y, padding + chartWidth, y, gridPaint)
-            
+
             // Draw score labels
             val score = (100 - i * 25).toString()
             canvas.drawText(score, padding - dp(15f), y + dp(3f), textPaint)
@@ -248,7 +246,7 @@ class TrendChart @JvmOverloads constructor(
         // Draw vertical grid lines (every 7 days)
         val daysToShow = min(dailyScores.size, 90)
         val stepSize = max(1, daysToShow / 7)
-        
+
         for (i in 0 until daysToShow step stepSize) {
             val x = padding + (i.toFloat() / (daysToShow - 1).toFloat()) * chartWidth
             canvas.drawLine(x, padding, x, padding + chartHeight, gridPaint)
@@ -265,17 +263,17 @@ class TrendChart @JvmOverloads constructor(
         for (i in 1 until points.size) {
             val prevPoint = points[i - 1]
             val currentPoint = points[i]
-            
+
             val midX = (prevPoint.x + currentPoint.x) / 2
             val midY = (prevPoint.y + currentPoint.y) / 2
-            
+
             if (i == 1) {
                 path.lineTo(midX, midY)
             } else {
                 path.quadTo(prevPoint.x, prevPoint.y, midX, midY)
             }
         }
-        
+
         // Final line to last point
         if (points.size > 1) {
             val lastPoint = points.last()
@@ -297,7 +295,7 @@ class TrendChart @JvmOverloads constructor(
                 DailyScore.ScoreCategory.POOR -> ContextCompat.getColor(context, R.color.red_500)
                 else -> ContextCompat.getColor(context, R.color.grey_500)
             }
-            
+
             canvas.drawCircle(point.x, point.y, dp(3f), pointPaint)
         }
     }

@@ -212,6 +212,7 @@
     <string name="x_times_per_y_days">%d times in %d days</string>
     <string name="yes_or_no_short_example">e.g. Exercise</string>
     <string name="color">Color</string>
+    <string name="priority">Priority</string>
     <string name="example_target">e.g. 15</string>
     <string name="measurable_short_example">e.g. Run</string>
     <string name="measurable_question_example">e.g. How many miles did you run today?</string>
@@ -236,4 +237,5 @@
     <string name="pref_midnight_delay_description">Wait until 3:00 AM to show a new day. Useful if you typically go to sleep after midnight. Requires app restart.</string>
     <string name="pref_animations_title">Disable animations</string>
     <string name="pref_animations_description">Disable confetti animation after adding a checkmark.</string>
+    <string name="daily_performance_widget_description">Shows today\'s performance score and remaining habits to complete</string>
 </resources>
