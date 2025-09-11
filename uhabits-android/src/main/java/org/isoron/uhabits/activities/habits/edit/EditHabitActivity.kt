@@ -353,6 +353,9 @@ class EditHabitActivity : AppCompatActivity() {
         
         // Highlight selected button
         when (priority) {
+            HabitPriority.CRITICAL -> {
+                binding.priorityHighButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.red_500, theme))
+            }
             HabitPriority.HIGH -> {
                 binding.priorityHighButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.red_300, theme))
             }

@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.isoron.uhabits.HabitsApplication
 import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.HabitPriority
 import org.isoron.uhabits.core.utils.DateUtils
 import org.isoron.uhabits.inject.HabitsApplicationComponent
 import java.io.File
@@ -68,9 +69,17 @@ class AnalyticsActivity : AppCompatActivity() {
                 • Excel
                 • Custom analysis tools
                 
+                🎯 NEW: Priority-Weighted Analytics
+                • ⭐ CRITICAL (4.0x): Core life habits & KPIs (Quran, Tasks, Health)
+                • 🔥 HIGH (2.5x): Important daily habits (Exercise, Study, Work)
+                • 📝 NORMAL (1.0x): Standard habits (Reading, Journaling)
+                • 🌱 LOW (0.5x): Nice-to-have habits (Entertainment, Minor routines)
+                
                 Export includes:
-                • Complete habit information (name, type, color, frequency)
-                • Entry counts and statistics
+                • Weighted success rates based on habit priority
+                • Priority-aware performance grading
+                • Individual and weighted analytics
+                • Core KPI vs minor habit separation
                 • Target values for numerical habits
                 • Archive status and metadata
                 • Timestamped export files
@@ -95,6 +104,30 @@ class AnalyticsActivity : AppCompatActivity() {
             setPadding(0, 32, 0, 16)
         }
         rootLayout.addView(cloudTitle)
+
+        // Priority Management Section
+        val priorityTitle = TextView(this).apply {
+            text = "⭐ Habit Priority Management"
+            textSize = 18f
+            setPadding(0, 32, 0, 16)
+        }
+        rootLayout.addView(priorityTitle)
+
+        // Show current habit priorities
+        val priorityStatsText = TextView(this).apply {
+            text = getPriorityDistributionText()
+            setPadding(16, 8, 16, 16)
+            setBackgroundColor(0xFF4CAF50.toInt())
+            setTextColor(0xFFFFFFFF.toInt())
+        }
+        rootLayout.addView(priorityStatsText)
+
+        // Priority recommendation button
+        val priorityRecommendButton = Button(this).apply {
+            text = "🤖 Auto-Assign Smart Priorities"
+            setOnClickListener { autoAssignPriorities() }
+        }
+        rootLayout.addView(priorityRecommendButton)
 
         // Optimal day recommendation
         val cloudExportManager = CloudExportManager(this, habitList)
@@ -243,6 +276,82 @@ class AnalyticsActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         // Modern Android handles storage automatically - no action needed
+    }
+
+    /**
+     * Get current priority distribution stats
+     */
+    private fun getPriorityDistributionText(): String {
+        val priorities = mutableMapOf<HabitPriority, MutableList<String>>()
+        
+        // Initialize priority lists
+        HabitPriority.values().forEach { priority ->
+            priorities[priority] = mutableListOf()
+        }
+        
+        // Categorize habits by priority
+        for (i in 0 until habitList.size()) {
+            val habit = habitList.getByPosition(i)
+            if (!habit.isArchived) {
+                val priority = habit.priority
+                priorities[priority]?.add(habit.name)
+            }
+        }
+        
+        val stats = StringBuilder()
+        stats.append("📊 Current Priority Distribution:\n\n")
+        
+        priorities.forEach { (priority, habits) ->
+            if (habits.isNotEmpty()) {
+                stats.append("${priority.icon} ${priority.displayName} (${priority.weight}x): ${habits.size} habits\n")
+                habits.take(3).forEach { habitName ->
+                    stats.append("  • $habitName\n")
+                }
+                if (habits.size > 3) {
+                    stats.append("  • ... and ${habits.size - 3} more\n")
+                }
+                stats.append("\n")
+            }
+        }
+        
+        val totalWeight = priorities.map { (priority, habits) -> 
+            priority.weight * habits.size 
+        }.sum()
+        
+        stats.append("🎯 Total Weight Score: ${"%.1f".format(totalWeight)}\n")
+        stats.append("💡 Higher weights = greater impact on performance scores")
+        
+        return stats.toString()
+    }
+
+    /**
+     * Auto-assign smart priorities based on habit names
+     */
+    private fun autoAssignPriorities() {
+        var assignedCount = 0
+        
+        for (i in 0 until habitList.size()) {
+            val habit = habitList.getByPosition(i)
+            val recommendedPriority = HabitPriority.getRecommendedPriority(habit.name)
+            
+            // Only update if priority is different
+            if (habit.priority != recommendedPriority) {
+                habit.priority = recommendedPriority
+                assignedCount++
+            }
+        }
+        
+        Toast.makeText(
+            this,
+            "🤖 Smart priorities assigned to $assignedCount habits!\n" +
+            "Quran, Tasks & Health → CRITICAL\n" +
+            "Study & Exercise → HIGH\n" +
+            "Entertainment → LOW",
+            Toast.LENGTH_LONG
+        ).show()
+        
+        // Refresh the display
+        setupUI()
     }
 
     /**

@@ -42,15 +42,58 @@
 
 ---
 
+## 🎯 Priority-Weighted Analytics System
+
+### 🔥 **Habit Priority Levels:**
+
+| Priority | Weight | Icon | Example Habits | Impact |
+|----------|--------|------|----------------|--------|
+| **CRITICAL** | 4.0x | ⭐ | Quran, Tasks completion, Health checkups | Core KPIs that drive life success |
+| **HIGH** | 2.5x | 🔥 | Exercise, Study, Work goals | Important daily habits |
+| **NORMAL** | 1.0x | 📝 | Reading, Journaling, Social time | Standard habits |
+| **LOW** | 0.5x | 🌱 | Entertainment limits, Minor routines | Nice-to-have habits |
+
+### 📊 **How Weighted Scoring Works:**
+
+**Example Calculation:**
+```
+Quran Reading (CRITICAL): 90% × 4.0 = 360 points
+Exercise (HIGH): 85% × 2.5 = 212.5 points  
+Reading (NORMAL): 70% × 1.0 = 70 points
+Social Media Limit (LOW): 60% × 0.5 = 30 points
+
+Weighted Average = (360 + 212.5 + 70 + 30) ÷ (4.0 + 2.5 + 1.0 + 0.5) = 84.1%
+```
+
+### 🤖 **Smart Priority Assignment:**
+
+The system automatically suggests priorities based on habit names:
+
+- **CRITICAL**: Quran, Prayer, Tasks, Health, Medicine, Sleep, Core work
+- **HIGH**: Study, Exercise, Diet, Family, Important projects  
+- **NORMAL**: Reading, Journaling, General activities
+- **LOW**: Entertainment, Games, Social media, Leisure activities
+
+### 💡 **BI Dashboard Benefits:**
+
+1. **Focus on What Matters**: Core habits have higher impact on overall scores
+2. **Realistic Performance**: Minor habit failures don't overshadow major successes
+3. **Strategic Insights**: Identify which high-priority habits need attention
+4. **Goal Alignment**: Performance scores reflect actual life priorities
+
+---
+
 ## 🎯 Export Format Optimization
 
 ### 📊 PowerBI Format Features:
 ```csv
-Date,Habit_ID,Habit_Name,Category,Type,Value,Target,Success_Rate,Streak,Color_Code,Is_Active,Week_Number,Month_Number,Quarter
+Date,Habit_ID,Habit_Name,Category,Type,Value,Target,Success_Rate,Weighted_Success_Rate,Streak,Priority,Weight,Color_Code,Is_Active,Week_Number,Month_Number,Quarter
 ```
+- **Priority-Weighted Analytics** with flexible scoring per habit
+- **Weighted Success Rate** for core KPIs vs minor habits
 - **Pre-calculated metrics** for faster dashboards
 - **Time intelligence** columns (Week, Month, Quarter)
-- **Success rate** for KPI visuals
+- **Priority levels**: CRITICAL (4.0x), HIGH (2.5x), NORMAL (1.0x), LOW (0.5x)
 - **Color codes** for consistent theming
 
 ### 📈 Looker Studio JSON Features:
@@ -60,23 +103,32 @@ Date,Habit_ID,Habit_Name,Category,Type,Value,Target,Success_Rate,Streak,Color_Co
   "habit_id": 1,
   "habit_name": "Morning Exercise",
   "success_rate": 85.5,
+  "weighted_success_rate": 213.75,
+  "priority": "HIGH",
+  "priority_weight": 2.5,
+  "priority_icon": "🔥",
   "streak_length": 12,
   "is_numerical": false
 }
 ```
+- **Priority-Weighted Analytics** for core habits vs minor ones
+- **Flexible scoring system** with custom weights per habit
 - **Nested data** support
 - **Decimal precision** for analytics
 - **Boolean fields** for filtering
-- **Timestamp** for time-series analysis
+- **Priority metadata** for advanced segmentation
 
 ### 📋 Excel Enhanced Format:
 ```csv
-Export_Date,Habit_Name,Performance_Grade,Trend_7d,Trend_30d,Notes
+Export_Date,Habit_Name,Priority,Weight,Success_Rate_%,Weighted_Success_Rate_%,Streak_Days,Target_Value,Performance_Grade,Weighted_Grade,Priority_Impact,Trend_7d,Trend_30d,Category,Color,Status,Notes
 ```
-- **Performance grades** (A+ to D)
+- **Priority-Weighted Performance** with flexible habit scoring
+- **Weighted Grades** (A+ to F) based on habit importance
+- **Priority Impact** analysis for core KPIs
+- **Performance grades** with weight adjustments
 - **Trend indicators** for quick insights
 - **Extended columns** for pivot tables
-- **Analysis-ready** format
+- **Analysis-ready** format with priority metadata
 
 ---
 
