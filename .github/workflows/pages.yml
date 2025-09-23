@@ -32,10 +32,8 @@ jobs:
         run: |
           mkdir -p public
           cp README.md public/index.md
-          cp advanced_dashboard.html public/
-          cp test_group_selection.html public/
           
-          # Create a simple index.html
+          # Create a simple index.html (NO PRIVATE DASHBOARD)
           cat > public/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
@@ -50,6 +48,7 @@ jobs:
                   .feature-card { background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff; }
                   .download-btn { background: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 25px; font-size: 1.1em; text-decoration: none; display: inline-block; margin: 10px; }
                   .download-btn:hover { background: #218838; transform: translateY(-2px); }
+                  .demo-card { background: #e9ecef; padding: 30px; border-radius: 15px; text-align: center; margin: 30px 0; border: 2px dashed #6c757d; }
               </style>
           </head>
           <body>
@@ -57,8 +56,7 @@ jobs:
                   <h1>🚀 Enhanced uHabits</h1>
                   <p>Advanced Analytics with Manual Group Selection</p>
                   <a href="https://github.com/mfadel85/uhabits/releases/latest" class="download-btn">📱 Download APK</a>
-                  <a href="advanced_dashboard.html" class="download-btn">📊 Live Dashboard</a>
-                  <a href="test_group_selection.html" class="download-btn">🎯 Group Test</a>
+                  <a href="https://github.com/mfadel85/uhabits" class="download-btn">⭐ View on GitHub</a>
               </div>
               
               <div class="features">
@@ -67,27 +65,30 @@ jobs:
                       <p>Choose from 4 life categories: Religious 🕌, Career & Work 💼, Social & Family 👨‍👩‍👧‍👦, Personal Improvement 🌟</p>
                   </div>
                   <div class="feature-card">
-                      <h3>📊 Real-time Analytics</h3>
-                      <p>Live group performance monitoring with A-F grades and visual charts</p>
+                      <h3>📊 Private Analytics</h3>
+                      <p>Your personal analytics dashboard runs locally on your device - your data stays private!</p>
                   </div>
                   <div class="feature-card">
                       <h3>💰 Cost-Optimized</h3>
-                      <p>Free GitHub Pages hosting, local-first analytics, minimal AWS usage</p>
+                      <p>Local-first design with optional cloud sync, minimal AWS usage</p>
                   </div>
                   <div class="feature-card">
                       <h3>🔒 Privacy-First</h3>
-                      <p>Your data stays on your device, optional cloud sync for analytics</p>
+                      <p>Your habit data never leaves your device unless you choose to export it</p>
                   </div>
               </div>
               
-              <div style="text-align: center; margin: 40px 0;">
-                  <h2>📈 See It In Action</h2>
-                  <iframe src="advanced_dashboard.html" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 10px;"></iframe>
+              <div class="demo-card">
+                  <h3>🔒 Your Analytics Stay Private</h3>
+                  <p>The dashboard with your personal habit data runs only on your phone/computer.</p>
+                  <p><strong>What's public:</strong> Project info, features, download links</p>
+                  <p><strong>What's private:</strong> Your habit data, analytics, personal dashboard</p>
+                  <a href="https://github.com/mfadel85/uhabits#-screenshots" class="download-btn">📸 See Screenshots</a>
               </div>
               
               <div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 10px;">
                   <h3>🌟 Ready to Transform Your Habits?</h3>
-                  <p>Download the enhanced app and start tracking your habits with powerful analytics!</p>
+                  <p>Download the enhanced app and start tracking your habits with powerful <strong>private</strong> analytics!</p>
                   <a href="https://github.com/mfadel85/uhabits" class="download-btn">⭐ Star on GitHub</a>
               </div>
           </body>

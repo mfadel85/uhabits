@@ -29,7 +29,8 @@
 
 ### 💰 **Cost-Optimized Cloud Analytics**
 - **Local-First Design**: Analytics work offline, sync when needed
-- **GitHub Pages Hosting**: Free dashboard hosting (no AWS costs)
+- **Private Dashboard**: Your analytics dashboard runs only on your device
+- **GitHub Pages Hosting**: Free project page hosting (no personal data exposed)
 - **Minimal Cloud Usage**: Only 1-2 API calls per sync (under free tiers)
 - **Smart Caching**: Reduces repeated API requests by 90%
 - **Optional Cloud**: Full functionality without any cloud services
@@ -42,7 +43,7 @@
 
 ## 📱 Download & Install
 
-### 🎯 **Latest Release** Not official nor in the storegit 
+### 🎯 **Latest Release** 
 [![Download APK](https://img.shields.io/badge/Download-Enhanced%20uHabits%20APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/mfadel85/uhabits/releases/latest)
 
 ### 📋 **Installation Steps**
@@ -56,6 +57,27 @@
 - Android 7.0+ (API level 28+)
 - ~10MB storage space
 - Same permissions as original uHabits
+
+## 🔒 Privacy & Security
+
+### **What's Public vs Private**
+✅ **Public** (on GitHub Pages):
+- Project documentation and features
+- Installation instructions  
+- Code repository and releases
+- General analytics capabilities
+
+🔒 **Private** (stays on your device):
+- Your personal habit data
+- Your analytics dashboard
+- Your group assignments and scores
+- Your exported analytics files
+
+### **Data Flow**
+- **Local-First**: All analytics work offline
+- **Optional Cloud**: You control if/when data syncs
+- **No Tracking**: We don't collect any personal data
+- **Your Control**: Export/delete your data anytime
 
 ## 🎯 Key Features Comparison
 
