@@ -1,0 +1,104 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Copy README as index
+        run: |
+          mkdir -p public
+          cp README.md public/index.md
+          cp advanced_dashboard.html public/
+          cp test_group_selection.html public/
+          
+          # Create a simple index.html
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Enhanced uHabits - Manual Group Selection</title>
+              <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; max-width: 1200px; margin: 0 auto; padding: 20px; }
+                  .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 15px; text-align: center; margin-bottom: 30px; }
+                  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0; }
+                  .feature-card { background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff; }
+                  .download-btn { background: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 25px; font-size: 1.1em; text-decoration: none; display: inline-block; margin: 10px; }
+                  .download-btn:hover { background: #218838; transform: translateY(-2px); }
+              </style>
+          </head>
+          <body>
+              <div class="hero">
+                  <h1>🚀 Enhanced uHabits</h1>
+                  <p>Advanced Analytics with Manual Group Selection</p>
+                  <a href="https://github.com/mfadel85/uhabits/releases/latest" class="download-btn">📱 Download APK</a>
+                  <a href="advanced_dashboard.html" class="download-btn">📊 Live Dashboard</a>
+                  <a href="test_group_selection.html" class="download-btn">🎯 Group Test</a>
+              </div>
+              
+              <div class="features">
+                  <div class="feature-card">
+                      <h3>🏷️ Manual Group Selection</h3>
+                      <p>Choose from 4 life categories: Religious 🕌, Career & Work 💼, Social & Family 👨‍👩‍👧‍👦, Personal Improvement 🌟</p>
+                  </div>
+                  <div class="feature-card">
+                      <h3>📊 Real-time Analytics</h3>
+                      <p>Live group performance monitoring with A-F grades and visual charts</p>
+                  </div>
+                  <div class="feature-card">
+                      <h3>💰 Cost-Optimized</h3>
+                      <p>Free GitHub Pages hosting, local-first analytics, minimal AWS usage</p>
+                  </div>
+                  <div class="feature-card">
+                      <h3>🔒 Privacy-First</h3>
+                      <p>Your data stays on your device, optional cloud sync for analytics</p>
+                  </div>
+              </div>
+              
+              <div style="text-align: center; margin: 40px 0;">
+                  <h2>📈 See It In Action</h2>
+                  <iframe src="advanced_dashboard.html" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 10px;"></iframe>
+              </div>
+              
+              <div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                  <h3>🌟 Ready to Transform Your Habits?</h3>
+                  <p>Download the enhanced app and start tracking your habits with powerful analytics!</p>
+                  <a href="https://github.com/mfadel85/uhabits" class="download-btn">⭐ Star on GitHub</a>
+              </div>
+          </body>
+          </html>
+          EOF
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

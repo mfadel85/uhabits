@@ -7,6 +7,13 @@
 
 ## 🎯 What's Enhanced
 
+### 🏷️ **Manual Group Selection System** 
+- **4 Life Categories**: Religious 🕌, Career & Work 💼, Social & Family 👨‍👩‍👧‍👦, Personal Improvement 🌟
+- **User-Controlled Assignment**: Manually assign each habit to the appropriate group
+- **Group Analytics**: Performance tracking and grading per group (A+ to F grades)
+- **Real-time Dashboard**: Live group performance monitoring with charts
+- **No Auto-Assignment**: Full user control over habit categorization
+
 ### 📊 **Advanced Analytics System**
 - **100-Point Scoring**: Intuitive 0-100 scale instead of confusing 0-1 decimals
 - **Multi-Timeframe Analysis**: Daily, weekly, and monthly performance metrics
@@ -19,6 +26,13 @@
 - **Looker Studio Support**: JSON export for Google's BI platform  
 - **Custom Analytics**: Comprehensive data export for any BI tool
 - **Professional Reports**: Executive-ready habit performance summaries
+
+### 💰 **Cost-Optimized Cloud Analytics**
+- **Local-First Design**: Analytics work offline, sync when needed
+- **GitHub Pages Hosting**: Free dashboard hosting (no AWS costs)
+- **Minimal Cloud Usage**: Only 1-2 API calls per sync (under free tiers)
+- **Smart Caching**: Reduces repeated API requests by 90%
+- **Optional Cloud**: Full functionality without any cloud services
 
 ### 🎨 **Enhanced User Interface**
 - **Professional Dashboard**: Tab-based analytics interface
@@ -48,6 +62,8 @@
 | Feature | Original uHabits | Enhanced uHabits |
 |---------|------------------|------------------|
 | Scoring System | 0-1 decimal | ✅ 0-100 points |
+| Group Assignment | None | ✅ Manual 4-group system |
+| Group Analytics | None | ✅ Real-time group performance |
 | Analytics | Basic charts | ✅ Advanced dashboard |
 | Data Export | CSV only | ✅ PowerBI + Looker Studio |
 | Performance Tracking | Daily only | ✅ Daily/Weekly/Monthly |
