@@ -28,7 +28,7 @@
 
 ## 📱 Download & Install
 
-### 🎯 **Latest Release**
+### 🎯 **Latest Release** Not official nor in the storegit 
 [![Download APK](https://img.shields.io/badge/Download-Enhanced%20uHabits%20APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/mfadel85/uhabits/releases/latest)
 
 ### 📋 **Installation Steps**
