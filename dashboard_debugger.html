@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 uHabits Dashboard Debugger</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .success { border-color: #2ecc71; background: #f8fff8; }
+        .error { border-color: #e74c3c; background: #fff8f8; }
+        .warning { border-color: #f39c12; background: #fffbf0; }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #2980b9; }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 uHabits Dashboard Debugger</h1>
+        <p>Use this tool to test your dashboard components before using the main dashboard.</p>
+
+        <!-- Test 1: JSON File Testing -->
+        <div class="test-section" id="jsonTest">
+            <h3>📄 Test 1: JSON File Upload</h3>
+            <p>Test if your JSON file is valid:</p>
+            <input type="file" id="jsonFileInput" accept=".json">
+            <button onclick="testJSONFile()">Test JSON File</button>
+            <div id="jsonResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 2: API Connection Testing -->
+        <div class="test-section" id="apiTest">
+            <h3>🌐 Test 2: API Connection</h3>
+            <p>Test your AWS API Gateway connection:</p>
+            <input type="text" id="apiUrlInput" placeholder="Enter your API Gateway URL (e.g., https://abc123.execute-api.eu-central-1.amazonaws.com/prod)">
+            <button onclick="testAPIConnection()">Test API Connection</button>
+            <div id="apiResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 3: Sample Data Test -->
+        <div class="test-section" id="sampleTest">
+            <h3>📊 Test 3: Sample Data Visualization</h3>
+            <p>Test dashboard with sample data:</p>
+            <button onclick="loadSampleData()">Load Sample Data</button>
+            <div id="sampleResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 4: DynamoDB Data Export -->
+        <div class="test-section" id="exportTest">
+            <h3>📥 Test 4: Export Fresh Data</h3>
+            <p>Commands to export fresh data from DynamoDB:</p>
+            <div class="result">
+# Export current DynamoDB data
+aws dynamodb scan --table-name uHabits-Analytics-prod --region eu-central-1 --output json > fresh_export.json
+
+# Or use your export script
+./export_analytics_data.sh</div>
+        </div>
+    </div>
+
+    <script>
+        // Test JSON File
+        function testJSONFile() {
+            const fileInput = document.getElementById('jsonFileInput');
+            const resultDiv = document.getElementById('jsonResult');
+            
+            if (!fileInput.files[0]) {
+                showResult('jsonResult', 'Please select a JSON file first.', 'warning');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Validate structure
+                    if (!data.Items || !Array.isArray(data.Items)) {
+                        throw new Error('JSON should have an "Items" array property');
+                    }
+                    
+                    const habitCount = data.Items.filter(item => 
+                        item.SK && item.SK.S && item.SK.S.startsWith('HABIT#')
+                    ).length;
+                    
+                    showResult('jsonResult', 
+                        `✅ JSON is valid!\n` +
+                        `📊 Total records: ${data.Items.length}\n` +
+                        `🎯 Habit records: ${habitCount}\n` +
+                        `📄 File size: ${(file.size / 1024).toFixed(2)} KB`, 
+                        'success'
+                    );
+                    
+                } catch (error) {
+                    showResult('jsonResult', 
+                        `❌ JSON Error: ${error.message}\n\n` +
+                        `🔧 Solutions:\n` +
+                        `1. Check if file is completely downloaded\n` +
+                        `2. Try exporting fresh data from DynamoDB\n` +
+                        `3. Use the test file: test_dashboard_data.json`, 
+                        'error'
+                    );
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // Test API Connection
+        async function testAPIConnection() {
+            const apiUrl = document.getElementById('apiUrlInput').value.trim();
+            
+            if (!apiUrl) {
+                showResult('apiResult', 'Please enter your API Gateway URL.', 'warning');
+                return;
+            }
+            
+            showResult('apiResult', '⏳ Testing API connection...', 'warning');
+            
+            try {
+                // Test basic connectivity
+                const testUrl = `${apiUrl.replace(/\/$/, '')}/api/dashboard`;
+                console.log('Testing URL:', testUrl);
+                
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                showResult('apiResult', 
+                    `✅ API Connection successful!\n` +
+                    `📊 Total habits: ${data.summary?.total_habits || 'N/A'}\n` +
+                    `📈 Average success rate: ${((data.summary?.avg_success_rate || 0) * 100).toFixed(1)}%\n` +
+                    `🔴 Critical habits: ${data.summary?.critical_habits || 0}\n` +
+                    `⏰ Last updated: ${data.last_updated || 'N/A'}`, 
+                    'success'
+                );
+                
+            } catch (error) {
+                console.error('API test error:', error);
+                showResult('apiResult', 
+                    `❌ API Connection failed: ${error.message}\n\n` +
+                    `🔧 Solutions:\n` +
+                    `1. Check if Lambda function exists: uhabits-dashboard-api\n` +
+                    `2. Verify API Gateway is deployed\n` +
+                    `3. Ensure CORS is enabled\n` +
+                    `4. Check Lambda function logs in CloudWatch\n` +
+                    `5. Verify DynamoDB permissions\n\n` +
+                    `💡 URL format: https://api-id.execute-api.eu-central-1.amazonaws.com/prod`, 
+                    'error'
+                );
+            }
+        }
+
+        // Load Sample Data
+        function loadSampleData() {
+            const sampleData = {
+                summary: {
+                    total_habits: 4,
+                    avg_success_rate: 0.73,
+                    critical_habits: 1,
+                    excellent_performers: 2
+                },
+                priority_distribution: {
+                    CRITICAL: 1,
+                    HIGH: 1,
+                    NORMAL: 1,
+                    LOW: 1
+                },
+                priority_performance: {
+                    CRITICAL: 0.85,
+                    HIGH: 0.72,
+                    NORMAL: 0.91,
+                    LOW: 0.45
+                },
+                performance_categories: {
+                    excellent: 2,
+                    good: 1,
+                    needs_work: 0,
+                    critical: 1
+                }
+            };
+            
+            showResult('sampleResult', 
+                `✅ Sample data loaded successfully!\n` +
+                JSON.stringify(sampleData, null, 2) + 
+                `\n\n🎯 This data should work with your dashboard.`, 
+                'success'
+            );
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            element.parentElement.className = `test-section ${type}`;
+        }
+    </script>
+</body>
+</html>

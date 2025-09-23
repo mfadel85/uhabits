@@ -1,0 +1,46 @@
+{
+  "Items": [
+    {
+      "PK": {"S": "USER#test_user"},
+      "SK": {"S": "HABIT#1"},
+      "habit_name": {"S": "Morning Exercise"},
+      "priority": {"S": "CRITICAL"},
+      "success_rate": {"N": "0.85"},
+      "current_streak": {"N": "15"},
+      "best_streak": {"N": "30"},
+      "total_completions": {"N": "120"}
+    },
+    {
+      "PK": {"S": "USER#test_user"},
+      "SK": {"S": "HABIT#2"},
+      "habit_name": {"S": "Read Books"},
+      "priority": {"S": "HIGH"},
+      "success_rate": {"N": "0.72"},
+      "current_streak": {"N": "8"},
+      "best_streak": {"N": "25"},
+      "total_completions": {"N": "95"}
+    },
+    {
+      "PK": {"S": "USER#test_user"},
+      "SK": {"S": "HABIT#3"},
+      "habit_name": {"S": "Drink Water"},
+      "priority": {"S": "NORMAL"},
+      "success_rate": {"N": "0.91"},
+      "current_streak": {"N": "22"},
+      "best_streak": {"N": "45"},
+      "total_completions": {"N": "180"}
+    },
+    {
+      "PK": {"S": "USER#test_user"},
+      "SK": {"S": "HABIT#4"},
+      "habit_name": {"S": "Social Media Break"},
+      "priority": {"S": "LOW"},
+      "success_rate": {"N": "0.45"},
+      "current_streak": {"N": "3"},
+      "best_streak": {"N": "12"},
+      "total_completions": {"N": "65"}
+    }
+  ],
+  "Count": 4,
+  "ScannedCount": 4
+}

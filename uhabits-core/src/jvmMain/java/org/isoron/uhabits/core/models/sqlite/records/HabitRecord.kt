@@ -23,6 +23,7 @@ import org.isoron.uhabits.core.database.Table
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitPriority
+import org.isoron.uhabits.core.models.HabitGroup
 import org.isoron.uhabits.core.models.HabitType
 import org.isoron.uhabits.core.models.NumericalHabitType
 import org.isoron.uhabits.core.models.PaletteColor
@@ -92,6 +93,9 @@ class HabitRecord {
     @field:Column
     var priority: Int? = null
 
+    @field:Column(name = "habit_group")
+    var group: Int? = null
+
     fun copyFrom(model: Habit) {
         id = model.id
         name = model.name
@@ -107,6 +111,7 @@ class HabitRecord {
         question = model.question
         uuid = model.uuid
         priority = model.priority.ordinal
+        group = model.group.ordinal
         val (numerator, denominator) = model.frequency
         freqNum = numerator
         freqDen = denominator
@@ -139,6 +144,11 @@ class HabitRecord {
             HabitPriority.values()[priority!!]
         } else {
             HabitPriority.NORMAL // Default for existing habits or invalid values
+        }
+        habit.group = if (group != null && group!! >= 0 && group!! < HabitGroup.values().size) {
+            HabitGroup.values()[group!!]
+        } else {
+            HabitGroup.PERSONAL_IMPROVEMENT // Default for existing habits or invalid values
         }
         if (reminderHour != null && reminderMin != null) {
             habit.reminder = Reminder(

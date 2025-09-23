@@ -81,6 +81,47 @@ fastlane/readme.md
 Thumbs.db
 .DS_Store
 
+# ==========================================
+# AWS & Cloud Security Configuration
+# ==========================================
+
+# AWS credentials and API keys (NEVER commit these)
+android_config.json
+powerbi_connection.txt
+.aws/
+aws-credentials.json
+aws-config.json
+
+# API keys and secrets  
+*.key
+*.pem
+*.p12
+api-keys.txt
+secrets.json
+config.secrets.json
+
+# Environment-specific configs
+.env
+.env.local
+.env.prod
+.env.staging
+
+# AWS SAM build artifacts
+aws-lambda/.aws-sam/
+.aws-sam/
+
+# Configuration previews (contains real data)
+cloud_sync_preview_*.json
+export_*.csv
+analytics_*.json
+
+# Deployment status files
+check_deployment.sh
+
+# ==========================================
+# End AWS Security Section
+# ==========================================
+
 # Ubuntu build scripts (keep these)
 !setup-ubuntu.sh
 !build-ubuntu.sh

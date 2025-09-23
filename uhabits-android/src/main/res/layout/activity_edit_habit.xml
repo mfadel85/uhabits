@@ -124,6 +124,20 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- Habit Group -->
+            <FrameLayout style="@style/FormOuterBox">
+                <LinearLayout style="@style/FormInnerBox">
+                    <TextView
+                        style="@style/FormLabel"
+                        android:text="@string/group" />
+                    <TextView
+                        style="@style/FormDropdown"
+                        android:id="@+id/groupPicker"
+                        android:text="🌟 Personal Improvement"
+                        android:textColor="?attr/contrast100" />
+                </LinearLayout>
+            </FrameLayout>
+
             <!-- Habit Priority -->
             <FrameLayout style="@style/FormOuterBox">
                 <LinearLayout style="@style/FormInnerBox">

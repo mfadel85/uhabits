@@ -48,6 +48,7 @@ import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitType
 import org.isoron.uhabits.core.models.HabitPriority
+import org.isoron.uhabits.core.models.HabitGroup
 import org.isoron.uhabits.core.models.NumericalHabitType
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.models.Reminder
@@ -87,6 +88,7 @@ class EditHabitActivity : AppCompatActivity() {
     var reminderDays: WeekdayList = WeekdayList.EVERY_DAY
     var targetType = NumericalHabitType.AT_LEAST
     var priority = HabitPriority.NORMAL
+    var group = HabitGroup.PERSONAL_IMPROVEMENT
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
@@ -110,6 +112,7 @@ class EditHabitActivity : AppCompatActivity() {
             freqDen = habit.frequency.denominator
             targetType = habit.targetType
             priority = habit.priority
+            group = habit.group
             habit.reminder?.let {
                 reminderHour = it.hour
                 reminderMin = it.minute
@@ -134,6 +137,7 @@ class EditHabitActivity : AppCompatActivity() {
             reminderMin = state.getInt("reminderMin")
             reminderDays = WeekdayList(state.getInt("reminderDays"))
             priority = HabitPriority.fromOrdinal(state.getInt("priority"))
+            group = HabitGroup.values()[state.getInt("group")]
         }
 
         updateColors()
@@ -168,6 +172,9 @@ class EditHabitActivity : AppCompatActivity() {
 
         // Setup priority buttons
         setupPriorityButtons()
+
+        // Setup group picker
+        setupGroupPicker()
 
         populateFrequency()
         binding.booleanFrequencyPicker.setOnClickListener {
@@ -280,6 +287,7 @@ class EditHabitActivity : AppCompatActivity() {
         habit.description = binding.notesInput.text.trim().toString()
         habit.color = color
         habit.priority = priority
+        habit.group = group
         if (reminderHour >= 0) {
             habit.reminder = Reminder(reminderHour, reminderMin, reminderDays)
         } else {
@@ -324,6 +332,33 @@ class EditHabitActivity : AppCompatActivity() {
             }
         }
         return isValid
+    }
+
+    private fun setupGroupPicker() {
+        populateGroup()
+        
+        binding.groupPicker.setOnClickListener {
+            val builder = AlertDialog.Builder(this)
+            val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.select_dialog_item)
+            
+            HabitGroup.values().forEach { group ->
+                arrayAdapter.add("${group.icon} ${group.displayName}")
+            }
+            
+            builder.setAdapter(arrayAdapter) { dialog, which ->
+                group = HabitGroup.values()[which]
+                populateGroup()
+                dialog.dismiss()
+            }
+            
+            builder.setTitle("Select Group")
+            val dialog = builder.create()
+            dialog.dismissCurrentAndShow()
+        }
+    }
+
+    private fun populateGroup() {
+        binding.groupPicker.text = "${group.icon} ${group.displayName}"
     }
 
     private fun setupPriorityButtons() {
@@ -427,6 +462,7 @@ class EditHabitActivity : AppCompatActivity() {
             putInt("reminderMin", reminderMin)
             putInt("reminderDays", reminderDays.toInteger())
             putInt("priority", priority.ordinal)
+            putInt("group", group.ordinal)
         }
     }
 }

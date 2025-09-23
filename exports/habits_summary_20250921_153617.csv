@@ -1,0 +1,75 @@
+PK,SK,HabitName,Priority,SuccessRate,WeightedSuccessRate,StreakLength,PriorityWeight,ColorCode,IsActive,TargetValue
+"USER#test","HABIT#1726836010000#test","Test","",0,0,0,1,"",true,1
+"USER#user_primary","HABIT#1726836020000#critical","Critical Habit","CRITICAL",0.95,3.8,0,1,"",true,1
+"USER#user_primary","HABIT#1726836020000#critical_habit","Critical Priority Habit","CRITICAL",0.95,3.8,15,1,"",true,1
+"USER#user_primary","HABIT#1726836020000#high","High Habit","HIGH",0.8,2,0,1,"",true,1
+"USER#user_primary","HABIT#1726836020000#high_habit","High Priority Habit","HIGH",0.8,2,8,1,"",true,1
+"USER#user_primary","HABIT#1726836020000#normal","Normal Habit","NORMAL",0.7,0.7,0,1,"",true,1
+"USER#user_primary","HABIT#1726836020000#normal_habit","Normal Priority Habit","NORMAL",0.7,0.7,5,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#10","Drpatear","HIGH",0.9,2.25,37,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#11","No of prayers at mosque","HIGH",0.8,2,21,1,"",true,2
+"USER#user_primary","HABIT#1758401126744#12","Evening Theker","HIGH",1,2.5,275,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#13","Morning Theker","HIGH",1,2.5,276,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#14","Sonen count","HIGH",1,2.5,65,1,"",true,8
+"USER#user_primary","HABIT#1758401126744#15","Reading non career","HIGH",0.9666666666666667,2.4166666666666665,30,1,"",true,20
+"USER#user_primary","HABIT#1758401126744#16","Audio Book Summary","HIGH",0.8,2,29,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#17","Reading Career","HIGH",1,2.5,48,1,"",true,30
+"USER#user_primary","HABIT#1758401126744#18","Pomodoro Count","HIGH",0.9666666666666667,2.4166666666666665,23,1,"",true,12
+"USER#user_primary","HABIT#1758401126744#19","Social Count","HIGH",1,2.5,62,1,"",true,6
+"USER#user_primary","HABIT#1758401126744#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#20","Kiyam","HIGH",0.6333333333333333,1.5833333333333333,77,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#21","Eat frogs out of comfort zone","HIGH",0.8666666666666667,2.166666666666667,30,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#22","Wetter","HIGH",0.6,1.5,77,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#23","Motivate Talia for Türkçe","HIGH",0.9333333333333333,2.3333333333333335,17,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#24","Ayla Türkçe listening","HIGH",0.5666666666666667,1.4166666666666665,7,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#25","Ayla science and Math","HIGH",0.6333333333333333,1.5833333333333333,13,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#26","Telaweh session with Ayla","HIGH",0.5666666666666667,1.4166666666666665,10,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#3","1% improvement","HIGH",0.8,2,28,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#4","Quran Time","HIGH",1,2.5,36,1,"",true,10
+"USER#user_primary","HABIT#1758401126744#5","WA index","HIGH",0.4666666666666667,1.1666666666666667,8,1,"",true,8
+"USER#user_primary","HABIT#1758401126744#6","Ayla Quran time","HIGH",1,2.5,65,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#7","Talia Quran time","HIGH",0.9666666666666667,2.4166666666666665,47,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#8","Duha","HIGH",1,2.5,121,1,"",true,1
+"USER#user_primary","HABIT#1758401126744#9","DBT","HIGH",0.6666666666666666,1.6666666666666665,22,1,"",true,1
+"USER#user_primary","HABIT#1758402881026#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758402881026#3","1% improvement","HIGH",0.7666666666666667,1.9166666666666667,28,1,"",true,1
+"USER#user_primary","HABIT#1758402881026#4","Quran Time","HIGH",0.9666666666666667,2.4166666666666665,36,1,"",true,10
+"USER#user_primary","HABIT#1758402881026#5","WA index","HIGH",0.43333333333333335,1.0833333333333335,8,1,"",true,8
+"USER#user_primary","HABIT#1758402881026#6","Ayla Quran time","HIGH",0.9666666666666667,2.4166666666666665,65,1,"",true,1
+"USER#user_primary","HABIT#1758402881026#7","Talia Quran time","HIGH",0.9333333333333333,2.3333333333333335,47,1,"",true,1
+"USER#user_primary","HABIT#1758402924066#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758402924066#3","1% improvement","HIGH",0.7666666666666667,1.9166666666666667,28,1,"",true,1
+"USER#user_primary","HABIT#1758402924066#4","Quran Time","HIGH",0.9666666666666667,2.4166666666666665,36,1,"",true,10
+"USER#user_primary","HABIT#1758402924066#5","WA index","HIGH",0.43333333333333335,1.0833333333333335,8,1,"",true,8
+"USER#user_primary","HABIT#1758402924066#6","Ayla Quran time","HIGH",0.9666666666666667,2.4166666666666665,65,1,"",true,1
+"USER#user_primary","HABIT#1758402924066#7","Talia Quran time","HIGH",0.9333333333333333,2.3333333333333335,47,1,"",true,1
+"USER#user_primary","HABIT#1758404710016#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758404710016#3","1% improvement","HIGH",0.7666666666666667,1.9166666666666667,28,1,"",true,1
+"USER#user_primary","HABIT#1758404710016#4","Quran Time","HIGH",0.9666666666666667,2.4166666666666665,36,1,"",true,10
+"USER#user_primary","HABIT#1758404710016#5","WA index","HIGH",0.43333333333333335,1.0833333333333335,8,1,"",true,8
+"USER#user_primary","HABIT#1758404710016#6","Ayla Quran time","HIGH",0.9666666666666667,2.4166666666666665,65,1,"",true,1
+"USER#user_primary","HABIT#1758404710016#7","Talia Quran time","HIGH",0.9333333333333333,2.3333333333333335,47,1,"",true,1
+"USER#user_primary","HABIT#1758404744238#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758404744238#3","1% improvement","HIGH",0.7666666666666667,1.9166666666666667,28,1,"",true,1
+"USER#user_primary","HABIT#1758404744238#4","Quran Time","HIGH",0.9666666666666667,2.4166666666666665,36,1,"",true,10
+"USER#user_primary","HABIT#1758404744238#5","WA index","HIGH",0.43333333333333335,1.0833333333333335,8,1,"",true,8
+"USER#user_primary","HABIT#1758404744238#6","Ayla Quran time","HIGH",0.9666666666666667,2.4166666666666665,65,1,"",true,1
+"USER#user_primary","HABIT#1758404744238#7","Talia Quran time","HIGH",0.9333333333333333,2.3333333333333335,47,1,"",true,1
+"USER#user_primary","HABIT#1758404744267#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758404744267#3","1% improvement","HIGH",0.7666666666666667,1.9166666666666667,28,1,"",true,1
+"USER#user_primary","HABIT#1758404744267#4","Quran Time","HIGH",0.9666666666666667,2.4166666666666665,36,1,"",true,10
+"USER#user_primary","HABIT#1758404744267#5","WA index","HIGH",0.43333333333333335,1.0833333333333335,8,1,"",true,8
+"USER#user_primary","HABIT#1758404744267#6","Ayla Quran time","HIGH",0.9666666666666667,2.4166666666666665,65,1,"",true,1
+"USER#user_primary","HABIT#1758404744267#7","Talia Quran time","HIGH",0.9333333333333333,2.3333333333333335,47,1,"",true,1
+"USER#user_primary","HABIT#1758404803302#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758404803302#3","1% improvement","HIGH",0.7666666666666667,1.9166666666666667,28,1,"",true,1
+"USER#user_primary","HABIT#1758404803302#4","Quran Time","HIGH",0.9666666666666667,2.4166666666666665,36,1,"",true,10
+"USER#user_primary","HABIT#1758404803302#5","WA index","HIGH",0.43333333333333335,1.0833333333333335,8,1,"",true,8
+"USER#user_primary","HABIT#1758404803302#6","Ayla Quran time","HIGH",0.9666666666666667,2.4166666666666665,65,1,"",true,1
+"USER#user_primary","HABIT#1758404803302#7","Talia Quran time","HIGH",0.9333333333333333,2.3333333333333335,47,1,"",true,1
+"USER#user_primary","HABIT#1758405202840#2","Day Planned","HIGH",1,2.5,259,1,"",true,1
+"USER#user_primary","HABIT#1758405202840#3","1% improvement","HIGH",0.7666666666666667,1.9166666666666667,28,1,"",true,1
+"USER#user_primary","HABIT#1758405202840#4","Quran Time","HIGH",0.9666666666666667,2.4166666666666665,36,1,"",true,10
+"USER#user_primary","HABIT#1758405202840#5","WA index","HIGH",0.43333333333333335,1.0833333333333335,8,1,"",true,8
+"USER#user_primary","HABIT#1758405202840#6","Ayla Quran time","HIGH",0.9666666666666667,2.4166666666666665,65,1,"",true,1
+"USER#user_primary","HABIT#1758405202840#7","Talia Quran time","HIGH",0.9333333333333333,2.3333333333333335,47,1,"",true,1

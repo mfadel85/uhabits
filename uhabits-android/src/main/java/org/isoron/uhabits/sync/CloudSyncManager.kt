@@ -1,0 +1,523 @@
+/*
+ * Copyright (C) 2016-2021 Álinson Santos Xavier <git@axavier.org>
+ *
+ * This file is part of Loop Habit Tracker.
+ *
+ * Loop Habit Tracker is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * Loop Habit Tracker is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.isoron.uhabits.sync
+
+import android.content.Context
+import android.util.Log
+import kotlinx.coroutines.*
+import org.json.JSONArray
+import org.json.JSONObject
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.preferences.Preferences
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.*
+
+/**
+ * Cloud sync manager for uHabits Analytics
+ * Handles uploading habit data to AWS Lambda backend
+ */
+class CloudSyncManager(
+    private val context: Context,
+    private val habitList: HabitList,
+    private val preferences: Preferences
+) {
+    companion object {
+        private const val TAG = "CloudSyncManager"
+        private const val CONFIG_FILE = "cloud_config.json"
+        private const val PREF_LAST_SYNC = "cloud_last_sync"
+        private const val PREF_SYNC_ENABLED = "cloud_sync_enabled"
+        private const val PREF_AUTO_SYNC_ENABLED = "cloud_auto_sync_enabled"
+        private const val SYNC_INTERVAL_MS = 60 * 60 * 1000L // 1 hour
+        private const val MIN_SYNC_INTERVAL_MS = 5 * 60 * 1000L // 5 minutes minimum
+    }
+
+    private var config: CloudConfig? = null
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    data class CloudConfig(
+        val baseUrl: String,
+        val syncEndpoint: String,
+        val apiKey: String,
+        val timeoutSeconds: Int,
+        val environment: String
+    )
+
+    init {
+        loadConfig()
+    }
+
+    private fun loadConfig() {
+        try {
+            val inputStream = context.assets.open(CONFIG_FILE)
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(jsonString)
+            
+            val awsConfig = json.getJSONObject("aws_config")
+            val apiGateway = awsConfig.getJSONObject("api_gateway")
+            
+            config = CloudConfig(
+                baseUrl = apiGateway.getString("base_url"),
+                syncEndpoint = apiGateway.getString("sync_endpoint"),
+                apiKey = apiGateway.getString("api_key"),
+                timeoutSeconds = apiGateway.getInt("timeout_seconds"),
+                environment = awsConfig.getString("environment")
+            )
+            
+            Log.i(TAG, "Cloud config loaded successfully: ${config}")
+            Log.i(TAG, "Sync enabled: ${preferences.isCloudSyncEnabled}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load cloud config", e)
+        }
+    }
+
+    fun isSyncEnabled(): Boolean {
+        return preferences.isCloudSyncEnabled && config != null
+    }
+
+    fun enableSync(enabled: Boolean) {
+        preferences.isCloudSyncEnabled = enabled
+    }
+
+    fun isAutoSyncEnabled(): Boolean {
+        return preferences.isCloudAutoSyncEnabled && isSyncEnabled()
+    }
+
+    fun enableAutoSync(enabled: Boolean) {
+        preferences.isCloudAutoSyncEnabled = enabled
+    }
+
+    /**
+     * Check if sync is needed based on time interval or habit changes
+     */
+    fun shouldSync(): Boolean {
+        if (!isAutoSyncEnabled()) return false
+        
+        val lastSync = getLastSyncTime()
+        val now = System.currentTimeMillis()
+        return (now - lastSync) >= SYNC_INTERVAL_MS
+    }
+
+    /**
+     * Trigger sync when habits are modified
+     */
+    fun onHabitChanged() {
+        if (!isAutoSyncEnabled()) return
+        
+        val lastSync = getLastSyncTime()
+        val now = System.currentTimeMillis()
+        
+        // Don't sync too frequently
+        if ((now - lastSync) < MIN_SYNC_INTERVAL_MS) return
+        
+        Log.i(TAG, "Habit changed, triggering background sync...")
+        coroutineScope.launch {
+            performSync()
+        }
+    }
+
+    /**
+     * Perform scheduled sync check
+     */
+    fun performScheduledSyncCheck() {
+        if (shouldSync()) {
+            Log.i(TAG, "Scheduled sync triggered...")
+            coroutineScope.launch {
+                performSync()
+            }
+        }
+    }
+
+    /**
+     * Performs a full sync of habit data to the cloud
+     */
+    suspend fun performSync(): SyncResult = withContext(Dispatchers.IO) {
+        Log.i(TAG, "performSync called")
+        Log.i(TAG, "isSyncEnabled: ${isSyncEnabled()}")
+        Log.i(TAG, "config: $config")
+        Log.i(TAG, "preferences.isCloudSyncEnabled: ${preferences.isCloudSyncEnabled}")
+        
+        if (!isSyncEnabled()) {
+            Log.w(TAG, "Sync disabled, returning Disabled result")
+            return@withContext SyncResult.Disabled
+        }
+
+        val currentConfig = config ?: return@withContext SyncResult.ConfigError
+
+        try {
+            Log.i(TAG, "Starting cloud sync...")
+            
+            val syncData = prepareSyncData()
+            Log.i(TAG, "Sync data prepared: ${syncData.toString().take(200)}...")
+            
+            val success = uploadToCloud(currentConfig, syncData)
+            
+            if (success) {
+                preferences.cloudLastSyncTime = System.currentTimeMillis()
+                Log.i(TAG, "Cloud sync completed successfully")
+                SyncResult.Success
+            } else {
+                Log.e(TAG, "Cloud sync failed")
+                SyncResult.NetworkError
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Cloud sync error", e)
+            SyncResult.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    private fun prepareSyncData(): JSONObject {
+        val habits = habitList.toMutableList()
+        val syncTimestamp = System.currentTimeMillis()
+        
+        // Calculate summary metrics with priority weighting
+        var totalHabits = 0
+        var activeHabits = 0
+        var totalWeightedScore = 0.0
+        var totalWeight = 0.0
+        
+        val priorityDistribution = mutableMapOf<String, Int>()
+        val habitsData = JSONArray()
+
+        for (habit in habits) {
+            totalHabits++
+            
+            if (!habit.isArchived) {
+                activeHabits++
+                
+                val priority = habit.priority
+                val weight = priority.weight
+                val successRate = calculateSuccessRate(habit)
+                val weightedSuccessRate = successRate * weight
+                
+                totalWeightedScore += weightedSuccessRate
+                totalWeight += weight
+                
+                // Count priority distribution
+                priorityDistribution[priority.name] = priorityDistribution.getOrDefault(priority.name, 0) + 1
+                
+                // Add detailed habit data including performance history
+                val habitData = JSONObject().apply {
+                    put("id", habit.id.toString())
+                    put("name", habit.name)
+                    put("priority", priority.name)
+                    put("weight", weight)
+                    put("success_rate", successRate)
+                    put("weighted_success_rate", weightedSuccessRate)
+                    put("streak_length", habit.streaks.getBest(1).firstOrNull()?.length ?: 0)
+                    put("is_numerical", habit.isNumerical)
+                    put("target_value", if (habit.isNumerical) habit.targetValue else 1.0)
+                    put("frequency", habit.frequency.toString())
+                    put("color", habit.color)
+                    put("type", habit.type.name)
+                    
+                    // Add detailed performance history for charting
+                    put("performance_history", generatePerformanceHistory(habit))
+                }
+                habitsData.put(habitData)
+            }
+        }
+
+        val overallWeightedSuccessRate = if (totalWeight > 0) totalWeightedScore / totalWeight else 0.0
+
+        return JSONObject().apply {
+            put("user_id", "user_primary") // Single user system
+            put("sync_timestamp", syncTimestamp)
+            put("sync_date", java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(syncTimestamp)))
+            
+            put("summary_metrics", JSONObject().apply {
+                put("total_habits", totalHabits)
+                put("active_habits", activeHabits)
+                put("overall_success_rate", if (activeHabits > 0) totalWeightedScore / activeHabits else 0.0)
+                put("weighted_success_rate", overallWeightedSuccessRate)
+            })
+            
+            put("priority_distribution", JSONObject(priorityDistribution))
+            
+            put("device_info", JSONObject().apply {
+                put("platform", "Android")
+                put("app_version", getAppVersion())
+                put("sync_version", "1.0")
+            })
+            
+            put("metadata", JSONObject().apply {
+                put("sync_type", "full")
+                put("habit_count", activeHabits)
+                put("includes_performance_history", true)
+            })
+            
+            put("habits_data", habitsData)
+        }
+    }
+
+    private fun calculateSuccessRate(habit: Habit): Double {
+        val today = org.isoron.uhabits.core.utils.DateUtils.getTodayWithOffset()
+        val thirtyDaysAgo = today.minus(29) // Last 30 days including today
+        
+        val entries = habit.computedEntries.getByInterval(thirtyDaysAgo, today)
+        
+        if (entries.isEmpty()) return 0.0
+        
+        // Calculate expected completions based on frequency
+        val frequency = habit.frequency
+        val expectedCompletions = when {
+            frequency.numerator == 1 && frequency.denominator == 1 -> 30.0 // Daily
+            frequency.numerator == 1 && frequency.denominator == 7 -> 30.0 / 7.0 // Weekly
+            frequency.numerator == 1 && frequency.denominator == 30 -> 1.0 // Monthly
+            else -> (30.0 * frequency.numerator) / frequency.denominator // Custom frequency
+        }
+        
+        // Count actual completions
+        val actualCompletions = entries.count { entry ->
+            if (habit.isNumerical) {
+                // For numerical habits, check if target was met
+                val value = entry.value / 1000.0
+                when (habit.targetType) {
+                    org.isoron.uhabits.core.models.NumericalHabitType.AT_LEAST -> value >= habit.targetValue
+                    org.isoron.uhabits.core.models.NumericalHabitType.AT_MOST -> value <= habit.targetValue
+                }
+            } else {
+                // For boolean habits, check if completed
+                entry.value == org.isoron.uhabits.core.models.Entry.YES_MANUAL || 
+                entry.value == org.isoron.uhabits.core.models.Entry.YES_AUTO
+            }
+        }.toDouble()
+        
+        // Calculate success rate as percentage
+        return if (expectedCompletions > 0) {
+            kotlin.math.min(1.0, actualCompletions / expectedCompletions) // Return as ratio 0-1
+        } else {
+            0.0
+        }
+    }
+
+    /**
+     * Generate detailed performance history for charting and analysis
+     * Returns last 90 days of data organized by day, week, and month
+     */
+    private fun generatePerformanceHistory(habit: Habit): JSONObject {
+        val today = org.isoron.uhabits.core.utils.DateUtils.getTodayWithOffset()
+        val ninetyDaysAgo = today.minus(89) // Last 90 days including today
+        
+        // Get all entries for the period
+        val entries = habit.computedEntries.getByInterval(ninetyDaysAgo, today)
+        
+        val performanceHistory = JSONObject()
+        
+        // 1. Daily performance data (last 90 days)
+        val dailyData = JSONArray()
+        for (i in 0 until 90) {
+            val date = today.minus(i)
+            val entry = entries.find { it.timestamp == date }
+            val isCompleted = entry?.let { e ->
+                if (habit.isNumerical) {
+                    val value = e.value / 1000.0
+                    when (habit.targetType) {
+                        org.isoron.uhabits.core.models.NumericalHabitType.AT_LEAST -> value >= habit.targetValue
+                        org.isoron.uhabits.core.models.NumericalHabitType.AT_MOST -> value <= habit.targetValue
+                    }
+                } else {
+                    e.value == org.isoron.uhabits.core.models.Entry.YES_MANUAL || 
+                    e.value == org.isoron.uhabits.core.models.Entry.YES_AUTO
+                }
+            } ?: false
+            
+            val dailyRecord = JSONObject().apply {
+                put("date", java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(date.unixTime)))
+                put("completed", isCompleted)
+                put("value", entry?.value ?: 0)
+                put("notes", entry?.notes ?: "")
+                put("day_of_week", date.weekday)
+            }
+            dailyData.put(dailyRecord)
+        }
+        performanceHistory.put("daily_data", dailyData)
+        
+        // 2. Weekly aggregations (last 13 weeks)
+        val weeklyData = JSONArray()
+        for (week in 0 until 13) {
+            val weekStart = today.minus((week * 7) + 6) // Start of week
+            val weekEnd = today.minus(week * 7) // End of week
+            val weekEntries = entries.filter { it.timestamp.unixTime >= weekStart.unixTime && it.timestamp.unixTime <= weekEnd.unixTime }
+            
+            val completedDays = weekEntries.count { entry ->
+                if (habit.isNumerical) {
+                    val value = entry.value / 1000.0
+                    when (habit.targetType) {
+                        org.isoron.uhabits.core.models.NumericalHabitType.AT_LEAST -> value >= habit.targetValue
+                        org.isoron.uhabits.core.models.NumericalHabitType.AT_MOST -> value <= habit.targetValue
+                    }
+                } else {
+                    entry.value == org.isoron.uhabits.core.models.Entry.YES_MANUAL || 
+                    entry.value == org.isoron.uhabits.core.models.Entry.YES_AUTO
+                }
+            }
+            
+            val expectedDays = calculateExpectedDaysInPeriod(habit, weekStart, weekEnd)
+            val completionRate = if (expectedDays > 0) completedDays.toDouble() / expectedDays else 0.0
+            
+            val weeklyRecord = JSONObject().apply {
+                put("week_start", java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(weekStart.unixTime)))
+                put("week_end", java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(weekEnd.unixTime)))
+                put("completed_days", completedDays)
+                put("expected_days", expectedDays)
+                put("completion_rate", completionRate)
+                put("total_value", if (habit.isNumerical) weekEntries.sumOf { it.value } / 1000.0 else completedDays)
+            }
+            weeklyData.put(weeklyRecord)
+        }
+        performanceHistory.put("weekly_data", weeklyData)
+        
+        // 3. Monthly aggregations (last 6 months)
+        val monthlyData = JSONArray()
+        val calendar = java.util.Calendar.getInstance()
+        calendar.timeInMillis = today.unixTime
+        
+        for (month in 0 until 6) {
+            calendar.add(java.util.Calendar.MONTH, if (month == 0) 0 else -1)
+            calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
+            val monthStart = org.isoron.uhabits.core.models.Timestamp(calendar.timeInMillis)
+            calendar.set(java.util.Calendar.DAY_OF_MONTH, calendar.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
+            val monthEnd = org.isoron.uhabits.core.models.Timestamp(calendar.timeInMillis)
+            
+            val monthEntries = entries.filter { it.timestamp.unixTime >= monthStart.unixTime && it.timestamp.unixTime <= monthEnd.unixTime }
+            
+            val completedDays = monthEntries.count { entry ->
+                if (habit.isNumerical) {
+                    val value = entry.value / 1000.0
+                    when (habit.targetType) {
+                        org.isoron.uhabits.core.models.NumericalHabitType.AT_LEAST -> value >= habit.targetValue
+                        org.isoron.uhabits.core.models.NumericalHabitType.AT_MOST -> value <= habit.targetValue
+                    }
+                } else {
+                    entry.value == org.isoron.uhabits.core.models.Entry.YES_MANUAL || 
+                    entry.value == org.isoron.uhabits.core.models.Entry.YES_AUTO
+                }
+            }
+            
+            val expectedDays = calculateExpectedDaysInPeriod(habit, monthStart, monthEnd)
+            val completionRate = if (expectedDays > 0) completedDays.toDouble() / expectedDays else 0.0
+            
+            val monthlyRecord = JSONObject().apply {
+                put("month", java.text.SimpleDateFormat("yyyy-MM", Locale.US).format(Date(monthStart.unixTime)))
+                put("completed_days", completedDays)
+                put("expected_days", expectedDays)
+                put("completion_rate", completionRate)
+                put("total_value", if (habit.isNumerical) monthEntries.sumOf { it.value } / 1000.0 else completedDays)
+            }
+            monthlyData.put(monthlyRecord)
+        }
+        performanceHistory.put("monthly_data", monthlyData)
+        
+        // 4. Streak history (current and recent streaks)
+        val streakData = JSONArray()
+        val recentStreaks = habit.streaks.getBest(5) // Get top 5 streaks
+        recentStreaks.forEach { streak ->
+            val streakRecord = JSONObject().apply {
+                put("start_date", java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(streak.start.unixTime)))
+                put("end_date", java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(streak.end.unixTime)))
+                put("length", streak.length)
+            }
+            streakData.put(streakRecord)
+        }
+        performanceHistory.put("streak_history", streakData)
+        
+        return performanceHistory
+    }
+    
+    /**
+     * Calculate expected days in a period based on habit frequency
+     */
+    private fun calculateExpectedDaysInPeriod(habit: Habit, startDate: org.isoron.uhabits.core.models.Timestamp, endDate: org.isoron.uhabits.core.models.Timestamp): Int {
+        val totalDays = startDate.daysUntil(endDate) + 1
+        val frequency = habit.frequency
+        
+        return when {
+            frequency.numerator == 1 && frequency.denominator == 1 -> totalDays // Daily
+            frequency.numerator == 1 && frequency.denominator == 7 -> totalDays / 7 // Weekly
+            frequency.numerator == 1 && frequency.denominator == 30 -> totalDays / 30 // Monthly
+            else -> ((totalDays * frequency.numerator) / frequency.denominator).toInt() // Custom frequency
+        }
+    }
+
+    private suspend fun uploadToCloud(config: CloudConfig, data: JSONObject): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val url = URL("${config.baseUrl}${config.syncEndpoint}")
+            val connection = url.openConnection() as HttpURLConnection
+            
+            connection.apply {
+                requestMethod = "POST"
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("X-Api-Key", config.apiKey)
+                connectTimeout = config.timeoutSeconds * 1000
+                readTimeout = config.timeoutSeconds * 1000
+                doOutput = true
+            }
+            
+            // Send data
+            connection.outputStream.use { output ->
+                output.write(data.toString().toByteArray(Charsets.UTF_8))
+            }
+            
+            val responseCode = connection.responseCode
+            Log.i(TAG, "Upload response code: $responseCode")
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                Log.i(TAG, "Upload successful: $response")
+                true
+            } else {
+                val errorResponse = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                Log.e(TAG, "Upload failed: $responseCode - $errorResponse")
+                false
+            }
+        } catch (e: IOException) {
+            Log.e(TAG, "Network error during upload", e)
+            false
+        }
+    }
+
+    private fun getAppVersion(): String {
+        return try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            packageInfo.versionName ?: "unknown"
+        } catch (e: Exception) {
+            "unknown"
+        }
+    }
+
+    fun getLastSyncTime(): Long {
+        return preferences.cloudLastSyncTime
+    }
+
+    fun cleanup() {
+        coroutineScope.cancel()
+    }
+
+    sealed class SyncResult {
+        object Success : SyncResult()
+        object Disabled : SyncResult()
+        object ConfigError : SyncResult()
+        object NetworkError : SyncResult()
+        data class Error(val message: String) : SyncResult()
+    }
+}

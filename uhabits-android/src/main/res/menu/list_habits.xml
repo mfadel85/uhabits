@@ -89,6 +89,12 @@
         app:showAsAction="never"/>
 
     <item
+        android:id="@+id/actionCloudSync"
+        android:orderInCategory="95"
+        android:title="Cloud Sync"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/actionSettings"
         android:orderInCategory="100"
         android:title="@string/action_settings"

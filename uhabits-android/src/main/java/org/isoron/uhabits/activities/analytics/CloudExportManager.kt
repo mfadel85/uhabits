@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitPriority
+import org.isoron.uhabits.core.models.HabitGroup
 import org.isoron.uhabits.core.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.*
@@ -130,7 +131,10 @@ class CloudExportManager(
      * Calculate actual success rate based on habit frequency and completion rate
      * Much more accurate than simple entry count / 30 days
      */
-    private fun calculateActualSuccessRate(habit: org.isoron.uhabits.core.models.Habit): Double {
+    /**
+     * Calculate the actual success rate for a habit using improved frequency-based algorithm
+     */
+    fun calculateActualSuccessRate(habit: org.isoron.uhabits.core.models.Habit): Double {
         val today = org.isoron.uhabits.core.utils.DateUtils.getTodayWithOffset()
         val thirtyDaysAgo = today.minus(29) // Last 30 days including today
         
@@ -263,12 +267,15 @@ class CloudExportManager(
             // Calculate actual and weighted success rates
             val actualSuccessRate = calculateActualSuccessRate(habit)
             val priority = habit.priority ?: HabitPriority.NORMAL
+            val group = habit.group ?: HabitGroup.PERSONAL_IMPROVEMENT
             val weightedSuccessRate = actualSuccessRate * priority.weight
 
             jsonData.append("  {\n")
             jsonData.append("    \"export_date\": \"$exportTime\",\n")
             jsonData.append("    \"habit_id\": $index,\n")
             jsonData.append("    \"habit_name\": \"${habit.name}\",\n")
+            jsonData.append("    \"group\": \"${group.displayName}\",\n")
+            jsonData.append("    \"group_icon\": \"${group.icon}\",\n")
             jsonData.append("    \"total_entries\": $totalEntries,\n")
             jsonData.append("    \"success_rate\": $actualSuccessRate,\n")
             jsonData.append("    \"weighted_success_rate\": $weightedSuccessRate,\n")

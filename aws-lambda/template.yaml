@@ -1,0 +1,174 @@
+# AWS CloudFormation Template for uHabits Analytics
+# Serverless infrastructure optimized for single-user, free-tier usage
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'uHabits Cloud Analytics - Serverless Backend'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'prod'
+    Description: 'Deployment environment'
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.12
+
+Resources:
+  # DynamoDB Table for habit analytics data
+  HabitsAnalyticsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'uHabits-Analytics-${Environment}'
+      BillingMode: PAY_PER_REQUEST  # Perfect for low usage
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: sync_date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      LocalSecondaryIndexes:
+        - IndexName: DateIndex
+          KeySchema:
+            - AttributeName: PK
+              KeyType: HASH
+            - AttributeName: sync_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false  # Reduce costs
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Project
+          Value: uHabits-Analytics
+        - Key: CostOptimized
+          Value: 'true'
+
+  # Lambda function for habit data sync
+  HabitSyncFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'uhabits-sync-${Environment}'
+      CodeUri: ./
+      Handler: habit-sync-function.lambda_handler
+      Runtime: python3.12  # Explicitly set to match your deployment
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref HabitsAnalyticsTable
+          ENVIRONMENT: !Ref Environment
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HabitsAnalyticsTable
+      Events:
+        SyncAPI:
+          Type: Api
+          Properties:
+            RestApiId: !Ref HabitsAPI
+            Path: /sync
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+  # API Gateway for mobile app integration
+  HabitsAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub 'uhabits-api-${Environment}'
+      StageName: !Ref Environment
+      Auth:
+        ApiKeyRequired: true
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          Description: 'uHabits API Usage Plan - Optimized for low usage'
+          Quota:
+            Limit: 1000  # Monthly limit
+            Period: MONTH
+          Throttle:
+            BurstLimit: 10
+            RateLimit: 5
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+        AllowOrigin: "'*'"
+      EndpointConfiguration:
+        Type: REGIONAL  # Lower cost than EDGE
+      Tags:
+        Project: uHabits-Analytics
+        CostOptimized: 'true'
+
+  # API Key for authentication
+  HabitsAPIKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub 'uhabits-api-key-${Environment}'
+      Description: 'API Key for uHabits mobile app'
+      Enabled: true
+
+  # Usage Plan Key association
+  HabitsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref HabitsAPIKey
+      KeyType: API_KEY
+      UsagePlanId: !Sub '${HabitsAPI.UsagePlan}'
+
+  # CloudWatch Log Group with retention
+  SyncFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/uhabits-sync-${Environment}'
+      RetentionInDays: 7  # Minimize storage costs
+
+Outputs:
+  APIGatewayURL:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${HabitsAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${AWS::StackName}-APIEndpoint'
+
+  APIKey:
+    Description: 'API Key for mobile app authentication'
+    Value: !Ref HabitsAPIKey
+    Export:
+      Name: !Sub '${AWS::StackName}-APIKey'
+
+  DynamoDBTable:
+    Description: 'DynamoDB table name for analytics data'
+    Value: !Ref HabitsAnalyticsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-TableName'
+
+  # PowerBI Connection Info
+  PowerBIConnectionString:
+    Description: 'Connection details for PowerBI Pro integration'
+    Value: !Sub |
+      DynamoDB Table: ${HabitsAnalyticsTable}
+      Region: ${AWS::Region}
+      Access Pattern: Query by PK='USER#user_primary'
+    Export:
+      Name: !Sub '${AWS::StackName}-PowerBIConnection'
+
+# Deployment Commands:
+# sam build
+# sam deploy --guided --parameter-overrides Environment=prod
+
+# Cost Estimation (Monthly):
+# - DynamoDB: $0 (Free tier: 25GB, 200M requests)
+# - Lambda: $0 (Free tier: 1M requests, 400,000 GB-seconds)
+# - API Gateway: $0 (Free tier: 1M requests)
+# - CloudWatch Logs: ~$0.01 (7-day retention)
+# Total: ~$0.01/month

@@ -51,6 +51,9 @@ import org.isoron.uhabits.inject.HabitsApplicationComponent
 import org.isoron.uhabits.utils.applyRootViewInsets
 import org.isoron.uhabits.utils.dismissCurrentDialog
 import org.isoron.uhabits.utils.restartWithFade
+import org.isoron.uhabits.utils.showMessage
+import org.isoron.uhabits.sync.CloudSyncManager
+import kotlinx.coroutines.launch
 
 class ListHabitsActivity : AppCompatActivity(), Preferences.Listener, CommandRunner.Listener {
 
@@ -64,6 +67,7 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener, CommandRun
     lateinit var prefs: Preferences
     lateinit var midnightTimer: MidnightTimer
     private lateinit var dailyScoreCalculator: DailyScoreCalculator
+    internal lateinit var cloudSyncManager: CloudSyncManager
     private val scope = CoroutineScope(Dispatchers.Main)
 
     private var permissionAlreadyRequested = false
@@ -103,6 +107,7 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener, CommandRun
         adapter = component.habitCardListAdapter
         taskRunner = appComponent.taskRunner
         dailyScoreCalculator = DailyScoreCalculator(appComponent.habitList)
+        cloudSyncManager = CloudSyncManager(this, appComponent.habitList, prefs)
         menu = component.listHabitsMenu
         Thread.setDefaultUncaughtExceptionHandler(BaseExceptionHandler(this))
         component.listHabitsBehavior.onStartup()
@@ -118,6 +123,11 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener, CommandRun
         appComponent.commandRunner.removeListener(this)
         dismissCurrentDialog()
         super.onPause()
+    }
+
+    override fun onDestroy() {
+        cloudSyncManager.cleanup()
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -213,6 +223,18 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener, CommandRun
         // Refresh the global performance dashboard when any command finishes
         // This includes habit check/uncheck, habit creation/deletion, etc.
         updateGlobalPerformanceData()
+        
+        // Trigger cloud sync for important habit changes
+        if (cloudSyncManager.isSyncEnabled()) {
+            scope.launch {
+                try {
+                    cloudSyncManager.performSync()
+                    Log.i("ListHabitsActivity", "Auto cloud sync completed")
+                } catch (e: Exception) {
+                    Log.e("ListHabitsActivity", "Auto cloud sync failed", e)
+                }
+            }
+        }
     }
 
     companion object {

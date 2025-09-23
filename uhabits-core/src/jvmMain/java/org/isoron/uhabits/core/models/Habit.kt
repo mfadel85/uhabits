@@ -25,6 +25,7 @@ data class Habit(
     var color: PaletteColor = PaletteColor(8),
     var description: String = "",
     var frequency: Frequency = Frequency.DAILY,
+    var group: HabitGroup = HabitGroup.PERSONAL_IMPROVEMENT,
     var id: Long? = null,
     var isArchived: Boolean = false,
     var name: String = "",
@@ -123,6 +124,8 @@ data class Habit(
         this.type = other.type
         this.unit = other.unit
         this.uuid = other.uuid
+        this.priority = other.priority
+        this.group = other.group
     }
 
     override fun equals(other: Any?): Boolean {
@@ -143,6 +146,8 @@ data class Habit(
         if (type != other.type) return false
         if (unit != other.unit) return false
         if (uuid != other.uuid) return false
+        if (priority != other.priority) return false
+        if (group != other.group) return false
 
         return true
     }
@@ -162,6 +167,8 @@ data class Habit(
         result = 31 * result + type.value
         result = 31 * result + unit.hashCode()
         result = 31 * result + (uuid?.hashCode() ?: 0)
+        result = 31 * result + priority.hashCode()
+        result = 31 * result + group.hashCode()
         return result
     }
 }

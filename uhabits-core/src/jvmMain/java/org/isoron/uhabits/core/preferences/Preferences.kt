@@ -216,6 +216,25 @@ open class Preferences(private val storage: Storage) {
             for (l in listeners) l.onQuestionMarksChanged()
         }
 
+    // Cloud sync preferences
+    var isCloudSyncEnabled: Boolean
+        get() = storage.getBoolean("cloud_sync_enabled", false)
+        set(value) {
+            storage.putBoolean("cloud_sync_enabled", value)
+        }
+
+    var isCloudAutoSyncEnabled: Boolean
+        get() = storage.getBoolean("cloud_auto_sync_enabled", false)
+        set(value) {
+            storage.putBoolean("cloud_auto_sync_enabled", value)
+        }
+
+    var cloudLastSyncTime: Long
+        get() = storage.getLong("cloud_last_sync", 0)
+        set(value) {
+            storage.putLong("cloud_last_sync", value)
+        }
+
     /**
      * @return An integer representing the first day of the week. Sunday
      * corresponds to 1, Monday to 2, and so on, until Saturday, which is
