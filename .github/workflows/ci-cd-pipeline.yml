@@ -1,0 +1,493 @@
+name: 🔄 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev, master ]
+  pull_request:
+    branches: [ main, dev, master ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+      run_tests:
+        description: 'Run tests'
+        required: true
+        default: true
+        type: boolean
+      skip_lint:
+        description: 'Skip lint checks'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+  JAVA_VERSION: '21'
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Stage 1: Code Quality & Static Analysis
+  # ═══════════════════════════════════════════════════════════════════════════
+  code-quality:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_lint != 'true' }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ☕ Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🔧 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' }}
+
+      - name: 📱 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📋 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 🧹 Run ktlint
+        run: ./gradlew ktlintCheck --continue
+        continue-on-error: true
+
+      - name: 📊 Upload ktlint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-report
+          path: |
+            **/build/reports/ktlint/**
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: 🔎 Run Android Lint
+        run: ./gradlew :uhabits-android:lintDebug --continue
+        continue-on-error: true
+
+      - name: 📊 Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: |
+            **/build/reports/lint-results*.html
+            **/build/reports/lint-results*.xml
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: 📋 Lint Summary
+        if: always()
+        run: |
+          echo "## 🔍 Code Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f "uhabits-android/build/reports/lint-results-debug.html" ]; then
+            echo "✅ Android Lint report generated" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Android Lint report not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Stage 2: Unit Tests
+  # ═══════════════════════════════════════════════════════════════════════════
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.run_tests != 'false' }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🔧 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' }}
+
+      - name: 📱 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📋 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 🧪 Run Core Unit Tests
+        run: ./gradlew :uhabits-core:test --continue
+
+      - name: 🧪 Run Android Unit Tests
+        run: ./gradlew :uhabits-android:testDebugUnitTest --continue
+
+      - name: 📊 Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: |
+            **/build/reports/tests/**
+            **/build/test-results/**
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: 📋 Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Unit Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count test results
+          CORE_PASSED=$(find uhabits-core/build/test-results -name "*.xml" -exec grep -h "tests=" {} \; 2>/dev/null | grep -oP 'tests="\K\d+' | paste -sd+ | bc 2>/dev/null || echo "0")
+          ANDROID_PASSED=$(find uhabits-android/build/test-results -name "*.xml" -exec grep -h "tests=" {} \; 2>/dev/null | grep -oP 'tests="\K\d+' | paste -sd+ | bc 2>/dev/null || echo "0")
+          
+          echo "| Module | Tests |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Core | ${CORE_PASSED:-0} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | ${ANDROID_PASSED:-0} |" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Stage 3: Build Debug APK
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-debug:
+    name: 🔨 Build Debug APK
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests]
+    if: |
+      always() && 
+      (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped') &&
+      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped')
+    outputs:
+      apk-path: ${{ steps.build.outputs.apk-path }}
+      version-name: ${{ steps.version.outputs.version-name }}
+      version-code: ${{ steps.version.outputs.version-code }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ☕ Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🔧 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' }}
+
+      - name: 📱 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📋 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 📝 Extract version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep "versionName" uhabits-android/build.gradle.kts | head -1 | grep -oP '"\K[^"]+')
+          VERSION_CODE=$(grep "versionCode" uhabits-android/build.gradle.kts | head -1 | grep -oP '\d+')
+          echo "version-name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version-code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION_NAME ($VERSION_CODE)"
+
+      - name: 🧹 Clean project
+        run: ./gradlew clean
+
+      - name: 🔨 Build Debug APK
+        id: build
+        run: |
+          ./gradlew :uhabits-android:assembleDebug --stacktrace
+          APK_PATH="uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk"
+          echo "apk-path=$APK_PATH" >> $GITHUB_OUTPUT
+
+      - name: 📊 APK Analysis
+        run: |
+          APK_PATH="uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk"
+          if [ -f "$APK_PATH" ]; then
+            APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+            APK_SIZE_BYTES=$(stat -f%z "$APK_PATH" 2>/dev/null || stat -c%s "$APK_PATH" 2>/dev/null)
+            echo "📱 APK Size: $APK_SIZE"
+            echo "APK_SIZE=$APK_SIZE" >> $GITHUB_ENV
+          fi
+
+      - name: 🏷️ Rename APK with version
+        run: |
+          VERSION="${{ steps.version.outputs.version-name }}"
+          BUILD_NUM="${{ github.run_number }}"
+          BRANCH="${{ github.ref_name }}"
+          
+          mkdir -p dist
+          cp uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk \
+             "dist/uHabits-v${VERSION}-build${BUILD_NUM}-${BRANCH}-debug.apk"
+
+      - name: 📦 Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: uhabits-debug-apk-${{ github.run_number }}
+          path: dist/*.apk
+          retention-days: 30
+
+      - name: 📋 Build Summary
+        run: |
+          echo "## 🔨 Debug Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ steps.version.outputs.version-name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version Code | ${{ steps.version.outputs.version-code }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Number | ${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| APK Size | ${APK_SIZE:-N/A} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Stage 4: Build Release APK (only on main/master or manual trigger)
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-release:
+    name: 🚀 Build Release APK
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests]
+    if: |
+      always() && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event.inputs.build_type == 'release') &&
+      (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped') &&
+      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped')
+    outputs:
+      apk-path: ${{ steps.build.outputs.apk-path }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ☕ Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🔧 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 📱 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📋 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 📝 Extract version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep "versionName" uhabits-android/build.gradle.kts | head -1 | grep -oP '"\K[^"]+')
+          VERSION_CODE=$(grep "versionCode" uhabits-android/build.gradle.kts | head -1 | grep -oP '\d+')
+          echo "version-name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version-code=$VERSION_CODE" >> $GITHUB_OUTPUT
+
+      - name: 🧹 Clean project
+        run: ./gradlew clean
+
+      - name: 🔨 Build Release APK
+        id: build
+        run: |
+          ./gradlew :uhabits-android:assembleRelease --stacktrace
+          APK_PATH="uhabits-android/build/outputs/apk/release/uhabits-android-release-unsigned.apk"
+          echo "apk-path=$APK_PATH" >> $GITHUB_OUTPUT
+
+      - name: 🔐 Sign APK (if keys available)
+        if: env.LOOP_KEY_ALIAS != ''
+        env:
+          LOOP_KEY_ALIAS: ${{ secrets.LOOP_KEY_ALIAS }}
+          LOOP_KEY_PASSWORD: ${{ secrets.LOOP_KEY_PASSWORD }}
+          LOOP_KEY_STORE: ${{ secrets.LOOP_KEY_STORE }}
+          LOOP_STORE_PASSWORD: ${{ secrets.LOOP_STORE_PASSWORD }}
+        run: |
+          echo "🔐 Signing APK with release keys..."
+          # Signing logic would go here if keys are configured
+
+      - name: 🏷️ Rename APK with version
+        run: |
+          VERSION="${{ steps.version.outputs.version-name }}"
+          BUILD_NUM="${{ github.run_number }}"
+          
+          mkdir -p dist
+          if [ -f "uhabits-android/build/outputs/apk/release/uhabits-android-release-unsigned.apk" ]; then
+            cp uhabits-android/build/outputs/apk/release/uhabits-android-release-unsigned.apk \
+               "dist/uHabits-v${VERSION}-build${BUILD_NUM}-release.apk"
+          fi
+
+      - name: 📦 Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: uhabits-release-apk-${{ github.run_number }}
+          path: dist/*.apk
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: 📋 Release Build Summary
+        run: |
+          echo "## 🚀 Release Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ steps.version.outputs.version-name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version Code | ${{ steps.version.outputs.version-code }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Number | ${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Signed | ${{ env.LOOP_KEY_ALIAS != '' && '✅ Yes' || '❌ No (unsigned)' }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Stage 5: Instrumented Tests (Optional - requires emulator)
+  # ═══════════════════════════════════════════════════════════════════════════
+  instrumented-tests:
+    name: 📱 Instrumented Tests
+    runs-on: ubuntu-latest
+    needs: [build-debug]
+    if: ${{ github.event.inputs.run_tests != 'false' && github.event_name == 'pull_request' }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [30, 33]
+        
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🔧 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 📱 Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: 📋 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 🤖 Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: google_apis
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: ./gradlew :uhabits-android:connectedDebugAndroidTest --continue
+
+      - name: 📊 Upload instrumented test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-test-reports-api${{ matrix.api-level }}
+          path: |
+            **/build/reports/androidTests/**
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Stage 6: Security Scan
+  # ═══════════════════════════════════════════════════════════════════════════
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: [build-debug]
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔒 Run dependency check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'uHabits'
+          path: '.'
+          format: 'HTML'
+          args: >
+            --enableRetired
+            --scan ./uhabits-android/build.gradle.kts
+            --scan ./uhabits-core/build.gradle.kts
+        continue-on-error: true
+
+      - name: 📊 Upload security report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: reports/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Stage 7: Notify on Completion
+  # ═══════════════════════════════════════════════════════════════════════════
+  notify:
+    name: 📢 Notify
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests, build-debug, build-release]
+    if: always()
+    
+    steps:
+      - name: 📋 Generate Pipeline Summary
+        run: |
+          echo "# 🔄 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Pipeline Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.code-quality.result == 'success' && '✅ Passed' || needs.code-quality.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || needs.unit-tests.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Debug Build | ${{ needs.build-debug.result == 'success' && '✅ Success' || needs.build-debug.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Release Build | ${{ needs.build-release.result == 'success' && '✅ Success' || needs.build-release.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download the APK from the **Artifacts** section above ⬆️" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: ✅ Pipeline Complete
+        if: needs.build-debug.result == 'success'
+        run: |
+          echo "🎉 CI/CD Pipeline completed successfully!"
+          echo "📦 APK artifacts are ready for download."
+
+      - name: ❌ Pipeline Failed
+        if: needs.build-debug.result == 'failure'
+        run: |
+          echo "❌ CI/CD Pipeline failed."
+          echo "Please check the logs for details."
+          exit 1

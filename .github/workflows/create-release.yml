@@ -1,0 +1,157 @@
+name: 🏷️ Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 2.3.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+  create-release:
+    name: 🚀 Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ☕ Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🔧 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 📱 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📋 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 📝 Get version info
+        id: version
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building version: $VERSION"
+
+      - name: 🧹 Clean project
+        run: ./gradlew clean
+
+      - name: 🔨 Build Debug APK
+        run: ./gradlew :uhabits-android:assembleDebug
+
+      - name: 🔨 Build Release APK
+        run: ./gradlew :uhabits-android:assembleRelease
+
+      - name: 📦 Prepare release assets
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p release-assets
+          
+          # Copy APKs with proper names
+          if [ -f "uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk" ]; then
+            cp "uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk" \
+               "release-assets/uHabits-v${VERSION}-debug.apk"
+          fi
+          
+          if [ -f "uhabits-android/build/outputs/apk/release/uhabits-android-release-unsigned.apk" ]; then
+            cp "uhabits-android/build/outputs/apk/release/uhabits-android-release-unsigned.apk" \
+               "release-assets/uHabits-v${VERSION}-release.apk"
+          fi
+          
+          # Generate checksums
+          cd release-assets
+          sha256sum *.apk > checksums.txt
+          
+          echo "📦 Release assets:"
+          ls -la
+
+      - name: 📝 Generate release notes
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          cat << 'EOF' > release-notes.md
+          # 🚀 uHabits v${{ steps.version.outputs.version }}
+          
+          ## 📦 Downloads
+          
+          | File | Description |
+          |------|-------------|
+          | `uHabits-v${{ steps.version.outputs.version }}-debug.apk` | Debug build with logging enabled |
+          | `uHabits-v${{ steps.version.outputs.version }}-release.apk` | Release build (unsigned) |
+          
+          ## ✨ Features
+          
+          - ☁️ Cloud sync with VPS backend
+          - 📊 Google Looker Studio integration
+          - 📈 Advanced analytics dashboard
+          - 🎯 100-point scoring system
+          - 📱 Numerical habit tracking
+          
+          ## 📋 Installation
+          
+          1. Download the APK file
+          2. Enable "Install from unknown sources" in Android settings
+          3. Open the APK file to install
+          
+          ## 🔐 Checksums
+          
+          Verify your download using SHA-256:
+          ```
+          $(cat release-assets/checksums.txt)
+          ```
+          
+          ---
+          
+          **Built with ❤️ using GitHub Actions**
+          EOF
+
+      - name: 🏷️ Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: uHabits v${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          files: |
+            release-assets/*.apk
+            release-assets/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📋 Release Summary
+        run: |
+          echo "## 🏷️ Release Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Assets:**" >> $GITHUB_STEP_SUMMARY
+          ls release-assets/*.apk | while read f; do
+            echo "- $(basename $f)" >> $GITHUB_STEP_SUMMARY
+          done
