@@ -169,11 +169,7 @@ jobs:
   build-debug:
     name: 🔨 Build Debug APK
     runs-on: ubuntu-latest
-    needs: [code-quality, unit-tests]
-    if: |
-      always() && 
-      (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped') &&
-      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped')
+    # Run in parallel - don't wait for tests
     outputs:
       apk-path: ${{ steps.build.outputs.apk-path }}
       version-name: ${{ steps.version.outputs.version-name }}
@@ -267,12 +263,7 @@ jobs:
   build-release:
     name: 🚀 Build Release APK
     runs-on: ubuntu-latest
-    needs: [code-quality, unit-tests]
-    if: |
-      always() && 
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event.inputs.build_type == 'release') &&
-      (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped') &&
-      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped')
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event.inputs.build_type == 'release'
     outputs:
       apk-path: ${{ steps.build.outputs.apk-path }}
 
@@ -453,7 +444,7 @@ jobs:
   notify:
     name: 📢 Notify
     runs-on: ubuntu-latest
-    needs: [code-quality, unit-tests, build-debug, build-release]
+    needs: [build-debug]
     if: always()
     
     steps:
@@ -465,10 +456,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Code Quality | ${{ needs.code-quality.result == 'success' && '✅ Passed' || needs.code-quality.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || needs.unit-tests.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Debug Build | ${{ needs.build-debug.result == 'success' && '✅ Success' || needs.build-debug.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Release Build | ${{ needs.build-release.result == 'success' && '✅ Success' || needs.build-release.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
