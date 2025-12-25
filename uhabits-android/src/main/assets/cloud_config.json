@@ -2,9 +2,9 @@
   "aws_config": {
     "region": "eu-central-1",
     "api_gateway": {
-      "base_url": "https://jodcprzip3.execute-api.eu-central-1.amazonaws.com/prod",
-      "sync_endpoint": "/sync",
-      "api_key": "Y1leD4smWeX3yfCRM9Sv8R1Jo7g9zusx08Xo4y7o",
+      "base_url": "https://kpitracker.quest",
+      "sync_endpoint": "/api/sync.php",
+      "api_key": "Z2yITovrkGIOgWlOW4704gvtzeSueNT8",
       "timeout_seconds": 30
     },
     "environment": "prod"

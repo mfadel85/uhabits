@@ -24,10 +24,13 @@ import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import org.isoron.uhabits.sync.CloudSyncDiagnosticsActivity
 import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +84,9 @@ import org.isoron.uhabits.utils.restartWithFade
 import org.isoron.uhabits.utils.showMessage
 import org.isoron.uhabits.utils.showSendEmailScreen
 import org.isoron.uhabits.utils.showSendFileScreen
+import org.isoron.uhabits.utils.StyledResources
 import org.isoron.uhabits.sync.CloudSyncManager
+import org.isoron.uhabits.sync.CloudSyncFix
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -177,50 +182,52 @@ class ListHabitsScreen
         activity.startActivity(intent)
     }
 
+    override fun performCloudSync() {
+        val activity = context as ListHabitsActivity
+        performCloudSyncInternal(activity)
+    }
+
     override fun showCloudSyncDialog() {
         val activity = context as ListHabitsActivity
         val cloudSyncManager = activity.cloudSyncManager
         
-        Log.i("ListHabitsScreen", "Cloud sync dialog requested")
-        Log.i("ListHabitsScreen", "Sync enabled: ${cloudSyncManager.isSyncEnabled()}")
-        Log.i("ListHabitsScreen", "Last sync: ${cloudSyncManager.getLastSyncTime()}")
+        val lastSync = cloudSyncManager.getLastSyncTime()
+        val isEnabled = cloudSyncManager.isSyncEnabled()
         
-        val message = buildCloudSyncMessage(cloudSyncManager)
-        Log.i("ListHabitsScreen", "Dialog message: $message")
+        val message = if (isEnabled) {
+            if (lastSync > 0) {
+                val lastSyncDate = java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault())
+                    .format(java.util.Date(lastSync))
+                "Status: Active\nLast sync: $lastSyncDate"
+            } else {
+                "Status: Enabled\nNever synced"
+            }
+        } else {
+            "Status: Disabled\n\nCloud sync is turned off."
+        }
         
         val dialog = AlertDialog.Builder(context)
-            .setTitle("Cloud Sync")
+            .setTitle("Cloud Sync Status")
             .setMessage(message)
-            .setPositiveButton("Sync Now") { _, _ ->
-                performCloudSync(activity)
-            }
-            .setNeutralButton("Settings") { _, _ ->
-                showCloudSyncSettings(cloudSyncManager)
-            }
-            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Close", null)
             .create()
+        
+        // Fix text and button colors to be visible
+        dialog.setOnShowListener {
+            val titleView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
+            val messageView = dialog.findViewById<TextView>(android.R.id.message)
+            val closeButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            
+            // Set black text colors for visibility
+            titleView?.setTextColor(android.graphics.Color.BLACK)
+            messageView?.setTextColor(android.graphics.Color.BLACK)
+            closeButton?.setTextColor(android.graphics.Color.BLACK)
+        }
         
         dialog.show()
     }
     
-    private fun buildCloudSyncMessage(syncManager: CloudSyncManager): String {
-        val lastSync = syncManager.getLastSyncTime()
-        val isEnabled = syncManager.isSyncEnabled()
-        
-        return if (isEnabled) {
-            if (lastSync > 0) {
-                val lastSyncDate = java.text.SimpleDateFormat("MMM dd, yyyy HH:mm", java.util.Locale.getDefault())
-                    .format(java.util.Date(lastSync))
-                "Cloud sync is enabled.\nLast sync: $lastSyncDate\n\nSync your habit data to the cloud for analytics and backup."
-            } else {
-                "Cloud sync is enabled but hasn't run yet.\n\nSync your habit data to the cloud for analytics and backup."
-            }
-        } else {
-            "Cloud sync is disabled.\n\nEnable cloud sync to store your habit data for analytics and backup."
-        }
-    }
-    
-    private fun performCloudSync(activity: ListHabitsActivity) {
+    private fun performCloudSyncInternal(activity: ListHabitsActivity) {
         Log.i("ListHabitsScreen", "Performing cloud sync...")
         CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -247,7 +254,28 @@ class ListHabitsScreen
                         activity.showMessage("Cloud sync configuration error. Check your settings.")
                     }
                     is CloudSyncManager.SyncResult.NetworkError -> {
-                        activity.showMessage("Network error. Please check your connection.")
+                        // Get detailed error info from CloudSyncManager
+                        val networkError = activity.cloudSyncManager.getLastNetworkError()
+                        val errorMessage = if (networkError != null) {
+                            when {
+                                networkError.isConnectivityError -> "Connection error: Check if your internet is working"
+                                networkError.isTimeoutError -> "Connection timed out. Server may be slow or unreachable"
+                                networkError.isAuthError -> "Authentication error. API key may be invalid"
+                                networkError.code == 404 -> "API endpoint not found (404). Check server configuration"
+                                networkError.code >= 500 -> "Server error (${networkError.code}). Server may have an issue"
+                                else -> networkError.message
+                            }
+                        } else {
+                            "Network connection failed. Please check your connection."
+                        }
+                        
+                        // Show network error
+                        AlertDialog.Builder(activity)
+                            .setTitle("Network Error")
+                            .setMessage(errorMessage + if (networkError != null) "\n\nTechnical details:\n${networkError.message}" else "")
+                            .setPositiveButton("Retry") { _, _ -> performCloudSyncInternal(activity) }
+                            .setNegativeButton("Cancel", null)
+                            .show()
                     }
                     is CloudSyncManager.SyncResult.Error -> {
                         activity.showMessage("Sync failed: ${result.message}")
@@ -258,39 +286,6 @@ class ListHabitsScreen
                 activity.showMessage("Sync failed: ${e.message}")
             }
         }
-    }
-    
-    private fun showCloudSyncSettings(syncManager: CloudSyncManager) {
-        val activity = context as ListHabitsActivity
-        val isEnabled = syncManager.isSyncEnabled()
-        
-        Log.i("ListHabitsScreen", "Showing cloud sync settings, currently enabled: $isEnabled")
-        
-        val dialog = AlertDialog.Builder(context)
-            .setTitle("Cloud Sync Settings")
-            .setMessage("Enable cloud sync to automatically backup your habit data and generate analytics.\n\nThis will sync your data to AWS cloud storage for analytics and backup purposes.")
-            .setPositiveButton(if (isEnabled) "Disable" else "Enable") { _, _ ->
-                val newState = !isEnabled
-                syncManager.enableSync(newState)
-                Log.i("ListHabitsScreen", "Cloud sync toggled to: $newState")
-                activity.showMessage(if (newState) "Cloud sync enabled" else "Cloud sync disabled")
-                
-                // If enabling for the first time, offer to sync now
-                if (newState) {
-                    AlertDialog.Builder(context)
-                        .setTitle("Sync Now?")
-                        .setMessage("Cloud sync is now enabled. Would you like to sync your habit data now?")
-                        .setPositiveButton("Yes") { _, _ ->
-                            performCloudSync(activity)
-                        }
-                        .setNegativeButton("No", null)
-                        .show()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .create()
-        
-        dialog.show()
     }
 
     override fun showSelectHabitTypeDialog() {

@@ -63,4 +63,11 @@ interface HabitsApplicationComponent {
     val taskRunner: TaskRunner
     val widgetPreferences: WidgetPreferences
     val widgetUpdater: WidgetUpdater
+    
+    // Inject the Cloud Sync diagnostics activity
+    fun inject(activity: org.isoron.uhabits.sync.CloudSyncDiagnosticsActivity)
+    
+    interface Provider {
+        fun getHabitsApplicationComponent(): HabitsApplicationComponent
+    }
 }

@@ -13,9 +13,9 @@ fi
 
 # Check Java version
 JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
-if [ "$JAVA_VERSION" -lt 17 ]; then
-    echo "❌ Error: Java 17 or higher required. Current version: $JAVA_VERSION"
-    echo "Run: sudo apt install openjdk-17-jdk"
+if [ "$JAVA_VERSION" -lt 21 ]; then
+    echo "❌ Error: Java 21 or higher required. Current version: $JAVA_VERSION"
+    echo "Run: sudo apt install openjdk-21-jdk"
     exit 1
 fi
 

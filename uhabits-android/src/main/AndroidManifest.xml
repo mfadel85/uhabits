@@ -131,6 +131,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.habits.list.ListHabitsActivity" />
         </activity>
+        
+        <activity
+            android:name=".sync.CloudSyncDiagnosticsActivity"
+            android:label="Cloud Sync Diagnostics">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.habits.list.ListHabitsActivity" />
+        </activity>
 
         <activity
             android:name=".activities.habits.performance.DailyPerformanceDetailsActivity"

@@ -8,12 +8,12 @@ echo "🚀 Setting up Ubuntu environment for uHabits Android development..."
 # Update system packages
 sudo apt update && sudo apt upgrade -y
 
-# Install Java 17 (required by the project)
-echo "📦 Installing OpenJDK 17..."
-sudo apt install -y openjdk-17-jdk
+# Install Java 21 (required by the project)
+echo "📦 Installing OpenJDK 21..."
+sudo apt install -y openjdk-21-jdk
 
 # Set JAVA_HOME
-echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc
+echo 'export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64' >> ~/.bashrc
 echo 'export PATH=$PATH:$JAVA_HOME/bin' >> ~/.bashrc
 source ~/.bashrc
 

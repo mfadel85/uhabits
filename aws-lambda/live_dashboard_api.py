@@ -362,7 +362,7 @@ def get_group_analytics(headers):
                 'total_weight': sum(h['weight'] for h in stats['habits']),
                 'grade': grade,
                 'status': status,
-                'habits': stats['habits'][:5]  # Top 5 habits
+                'habits': stats['habits']  # All habits for detailed view
             }
         else:
             group_performance[group] = {

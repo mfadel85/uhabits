@@ -28,7 +28,7 @@ cd uhabits
 # Make script executable
 chmod +x setup-ubuntu.sh
 
-# Run the setup (installs Java 17, Android SDK, etc.)
+# Run the setup (installs Java 21, Android SDK, etc.)
 ./setup-ubuntu.sh
 
 # Restart terminal or reload bash profile
@@ -37,7 +37,7 @@ source ~/.bashrc
 
 ### 3. Verify Installation
 ```bash
-# Check Java version (should be 17+)
+# Check Java version (should be 21+)
 java -version
 
 # Check Android SDK

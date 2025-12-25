@@ -114,6 +114,11 @@ class ListHabitsMenu @Inject constructor(
                 return true
             }
 
+            R.id.actionCloudSyncDiagnostics -> {
+                behavior.onCloudSyncDiagnostics()
+                return true
+            }
+
             R.id.actionSettings -> {
                 behavior.onViewSettings()
                 return true

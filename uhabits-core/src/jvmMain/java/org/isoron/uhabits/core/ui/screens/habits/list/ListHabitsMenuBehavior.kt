@@ -50,6 +50,10 @@ class ListHabitsMenuBehavior @Inject constructor(
     }
 
     fun onCloudSync() {
+        screen.performCloudSync()
+    }
+
+    fun onCloudSyncDiagnostics() {
         screen.showCloudSyncDialog()
     }
 
@@ -139,6 +143,7 @@ class ListHabitsMenuBehavior @Inject constructor(
         fun applyTheme()
         fun showAboutScreen()
         fun showAnalyticsScreen()
+        fun performCloudSync()
         fun showCloudSyncDialog()
         fun showFAQScreen()
         fun showSettingsScreen()

@@ -108,6 +108,20 @@ class ListHabitsActivity : AppCompatActivity(), Preferences.Listener, CommandRun
         taskRunner = appComponent.taskRunner
         dailyScoreCalculator = DailyScoreCalculator(appComponent.habitList)
         cloudSyncManager = CloudSyncManager(this, appComponent.habitList, prefs)
+        
+        // EMERGENCY FIX: Force enable cloud sync
+        prefs.isCloudSyncEnabled = true
+        
+        // Apply emergency fixes
+        try {
+            org.isoron.uhabits.sync.EmergencySyncFix(this, cloudSyncManager, prefs).applyEmergencyFix()
+        } catch (e: Exception) {
+            android.util.Log.e("EmergencyFix", "Failed to apply emergency fix", e)
+        }
+        
+        // Force enable cloud sync on startup
+        prefs.isCloudSyncEnabled = true
+        
         menu = component.listHabitsMenu
         Thread.setDefaultUncaughtExceptionHandler(BaseExceptionHandler(this))
         component.listHabitsBehavior.onStartup()

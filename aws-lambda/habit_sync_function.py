@@ -40,9 +40,23 @@ def lambda_handler(event, context):
         logger.info(f"Event received: {json.dumps(event, default=str)}")
         logger.info(f"Table name: {table_name}")
         
-        # Parse the request body
+        # Handle GET requests for connectivity/health checks
+        http_method = event.get('httpMethod', 'POST')
+        if http_method == 'GET':
+            logger.info("Handling GET request for connectivity check")
+            return create_response(200, {
+                "status": "healthy",
+                "message": "uHabits sync endpoint is reachable and operational",
+                "timestamp": datetime.utcnow().isoformat(),
+                "service": "uhabits-sync-prod",
+                "version": "1.0"
+            })
+        
+        # Parse the request body for POST requests
         if 'body' in event:
             # API Gateway integration
+            if event['body'] is None:
+                return create_response(400, "Request body is required for sync operations")
             body = json.loads(event['body'])
         else:
             # Direct Lambda invocation
@@ -61,9 +75,14 @@ def lambda_handler(event, context):
         
         logger.info(f"Sync completed successfully: {result['summary']}")
         
+        # Add default category application info to response if any were applied
+        category_info = ""
+        if 'standardized_categories' in result and result['standardized_categories'] > 0:
+            category_info = f" Applied default category to {result['standardized_categories']} habits with missing categories."
+        
         return create_response(200, {
             "status": "success",
-            "message": "Habit data synced successfully",
+            "message": f"Habit data synced successfully with preserved categories.{category_info}",
             "timestamp": datetime.utcnow().isoformat(),
             "processed": result
         })
@@ -96,6 +115,15 @@ def process_habit_sync(sync_data):
         else:
             return obj
     
+    # Preserve original category values from mobile app
+    def standardize_category(category):
+        # Return the exact category from the app, or use a default if none is provided
+        if not category:
+            return "Uncategorized"  # Default category only if completely missing
+            
+        # Return the original category as-is without any modification
+        return category
+    
     # Prepare DynamoDB items
     converted_data = convert_floats(sync_data)
     
@@ -116,6 +144,7 @@ def process_habit_sync(sync_data):
     # Store individual habit records with performance history
     habits_stored = 0
     performance_records = 0
+    standardized_categories = 0
     
     with table.batch_writer() as batch:
         # Store summary
@@ -126,6 +155,15 @@ def process_habit_sync(sync_data):
             habit_id = habit.get('id', 'unknown')
             
             # Main habit record
+            # Standardize category to ensure consistency
+            raw_category = habit.get('category')
+            standardized_category = standardize_category(raw_category)
+            
+            # We're now preserving categories as-is, only log if default was applied
+            if not raw_category and standardized_category == "Uncategorized":
+                logger.info(f"Applied default category for habit '{habit.get('name')}': 'None' → 'Uncategorized'")
+                standardized_categories += 1
+            
             habit_item = {
                 'PK': f"USER#{user_id}",
                 'SK': f"HABIT#{sync_timestamp}#{habit_id}",
@@ -143,6 +181,7 @@ def process_habit_sync(sync_data):
                 'frequency': habit.get('frequency'),
                 'color': habit.get('color'),
                 'type': habit.get('type'),
+                'category': standardized_category,
                 'ttl': int(sync_timestamp / 1000) + (365 * 24 * 60 * 60)  # 1 year TTL
             }
             batch.put_item(Item=habit_item)
@@ -163,6 +202,7 @@ def process_habit_sync(sync_data):
                         'habit_name': habit.get('name'),
                         'priority': habit.get('priority'),
                         'weight': habit.get('weight'),
+                        'category': standardized_category,  # Include category in daily records
                         'date': daily_record.get('date'),
                         'completed': daily_record.get('completed'),
                         'value': daily_record.get('value'),
@@ -185,6 +225,7 @@ def process_habit_sync(sync_data):
                         'habit_name': habit.get('name'),
                         'priority': habit.get('priority'),
                         'weight': habit.get('weight'),
+                        'category': standardized_category,  # Include category in weekly records
                         'week_start': weekly_record.get('week_start'),
                         'week_end': weekly_record.get('week_end'),
                         'completed_days': weekly_record.get('completed_days'),
@@ -208,6 +249,7 @@ def process_habit_sync(sync_data):
                         'habit_name': habit.get('name'),
                         'priority': habit.get('priority'),
                         'weight': habit.get('weight'),
+                        'category': standardized_category,  # Include category in monthly records
                         'month': monthly_record.get('month'),
                         'completed_days': monthly_record.get('completed_days'),
                         'expected_days': monthly_record.get('expected_days'),
@@ -230,6 +272,7 @@ def process_habit_sync(sync_data):
                         'habit_name': habit.get('name'),
                         'priority': habit.get('priority'),
                         'weight': habit.get('weight'),
+                        'category': standardized_category,  # Include category in streak records
                         'start_date': streak_record.get('start_date'),
                         'end_date': streak_record.get('end_date'),
                         'length': streak_record.get('length'),
@@ -239,10 +282,15 @@ def process_habit_sync(sync_data):
                     batch.put_item(Item=streak_item)
                     performance_records += 1
     
+    summary_text = f"Stored 1 sync record, {habits_stored} habit records, and {performance_records} performance records with preserved original categories"
+    if standardized_categories > 0:
+        summary_text += f", applied default category to {standardized_categories} habits with missing categories"
+    
     return {
-        'summary': f"Stored 1 sync record, {habits_stored} habit records, and {performance_records} performance records",
+        'summary': summary_text,
         'habits_count': habits_stored,
         'performance_records': performance_records,
+        'standardized_categories': standardized_categories,
         'sync_timestamp': sync_timestamp
     }
 

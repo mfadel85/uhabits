@@ -28,6 +28,7 @@ echo ""
 
 # Clean previous builds
 echo -e "${YELLOW}🧹 Cleaning previous builds...${NC}"
+cd "$(dirname "$0")"
 ./gradlew clean
 
 # Build APK

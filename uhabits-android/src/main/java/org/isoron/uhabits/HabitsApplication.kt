@@ -36,7 +36,7 @@ import java.io.File
 /**
  * The Android application for Loop Habit Tracker.
  */
-class HabitsApplication : Application() {
+class HabitsApplication : Application(), HabitsApplicationComponent.Provider {
 
     private lateinit var context: Context
     private lateinit var widgetUpdater: WidgetUpdater
@@ -106,6 +106,10 @@ class HabitsApplication : Application() {
 
     val component: HabitsApplicationComponent
         get() = HabitsApplication.component
+        
+    override fun getHabitsApplicationComponent(): HabitsApplicationComponent {
+        return HabitsApplication.component
+    }
 
     companion object {
         lateinit var component: HabitsApplicationComponent
